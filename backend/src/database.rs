@@ -8,6 +8,10 @@ pub async fn establish_connection() -> Result<DatabaseConnection, DbErr> {
     Database::connect(&database_url).await
 }
 
+pub async fn establish_connection_with_url(database_url: &str) -> Result<DatabaseConnection, DbErr> {
+    Database::connect(database_url).await
+}
+
 pub async fn create_tables(db: &DatabaseConnection) -> Result<(), DbErr> {
     use crate::entity::*;
     
