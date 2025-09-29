@@ -1,6 +1,6 @@
 use sea_orm::*;
 use crate::entity::labeler::{Entity as Labeler, Model as LabelerModel, ActiveModel as LabelerActiveModel};
-use crate::entity::group::{Entity as Group, Model as GroupModel};
+use crate::entity::group::Model as GroupModel;
 
 pub struct LabelerRepository;
 
@@ -57,7 +57,7 @@ impl LabelerRepository {
         labeler_id: i32,
         group_id: i32,
     ) -> Result<(), DbErr> {
-        use crate::entity::labeler_groups::{Entity as LabelerGroups, ActiveModel as LabelerGroupsActiveModel};
+        use crate::entity::labeler_groups::ActiveModel as LabelerGroupsActiveModel;
         
         let labeler_group = LabelerGroupsActiveModel {
             labeler_id: Set(labeler_id),

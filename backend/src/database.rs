@@ -13,8 +13,6 @@ pub async fn establish_connection_with_url(database_url: &str) -> Result<Databas
 }
 
 pub async fn create_tables(db: &DatabaseConnection) -> Result<(), DbErr> {
-    use crate::entity::*;
-    
     // Create all tables using raw SQL
     let create_admin_table = r#"
         CREATE TABLE IF NOT EXISTS admin (

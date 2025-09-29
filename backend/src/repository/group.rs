@@ -2,7 +2,7 @@ use sea_orm::*;
 use crate::entity::group::{Entity as Group, Model as GroupModel, ActiveModel as GroupActiveModel};
 use crate::entity::image::{Entity as Image, Model as ImageModel};
 use crate::entity::tag::{Entity as Tag, Model as TagModel};
-use crate::entity::labeler::{Entity as Labeler, Model as LabelerModel};
+use crate::entity::labeler::Model as LabelerModel;
 
 pub struct GroupRepository;
 
