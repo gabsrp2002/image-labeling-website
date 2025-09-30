@@ -2,6 +2,10 @@ use actix_web::{web, App, HttpServer};
 use actix_cors::Cors;
 use image_labeling_website::database::{establish_connection, create_tables};
 use image_labeling_website::routes::auth::login;
+use image_labeling_website::routes::admin::labeler::{
+    create_labeler, get_labeler, list_labelers, update_labeler, delete_labeler
+};
+use image_labeling_website::routes::admin::groups::list_groups;
 use image_labeling_website::repository::AdminRepository;
 use dotenv::dotenv;
 use bcrypt::hash;
@@ -56,6 +60,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .service(
                 web::scope("/api/v1")
                     .route("/login", web::post().to(login))
+                    .service(
+                        web::scope("/admin")
+                            .route("/groups", web::get().to(list_groups))
+                            .service(
+                                web::scope("/labeler")
+                                    .route("", web::post().to(create_labeler))
+                                    .route("", web::get().to(list_labelers))
+                                    .route("/{id}", web::get().to(get_labeler))
+                                    .route("/{id}", web::put().to(update_labeler))
+                                    .route("/{id}", web::delete().to(delete_labeler))
+                            )
+                    )
             )
     })
     .bind("127.0.0.1:8080")?

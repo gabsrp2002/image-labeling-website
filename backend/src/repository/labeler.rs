@@ -84,4 +84,18 @@ impl LabelerRepository {
         
         Ok(())
     }
+
+    pub async fn remove_from_all_groups(
+        db: &DatabaseConnection,
+        labeler_id: i32,
+    ) -> Result<(), DbErr> {
+        use crate::entity::labeler_groups::Entity as LabelerGroups;
+        
+        LabelerGroups::delete_many()
+            .filter(crate::entity::labeler_groups::Column::LabelerId.eq(labeler_id))
+            .exec(db)
+            .await?;
+        
+        Ok(())
+    }
 }
