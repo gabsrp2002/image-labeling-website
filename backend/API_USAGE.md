@@ -41,20 +41,14 @@ curl -X POST http://127.0.0.1:8080/api/login \
 
 ## Running the Server
 
-1. Copy the example environment file:
-```bash
-cd backend
-cp .env.example .env
-```
-
-2. Edit the `.env` file and set your JWT secret:
+1. Edit the `.env` file and set your JWT secret:
 ```bash
 # Generate a secure JWT secret
 openssl rand -base64 32
 # Add the generated secret to your .env file
 ```
 
-3. Start the server:
+2. Start the server:
 ```bash
 cargo run
 ```
