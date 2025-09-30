@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useApiClient } from '@/utils/api';
+import { LoadingSpinner, PageHeader, BackButton, Card, Tabs, Button, EmptyState } from '@/components';
 
 interface Group {
   id: number;
@@ -38,17 +39,6 @@ interface GroupDetailResponse {
     images: Image[];
   };
 }
-
-// interface GroupDetailResponse {
-//   success: boolean;
-//   message: string;
-//   data: {
-//     group: Group;
-//     labelers: Labeler[];
-//     tags: Tag[];
-//     images: Image[];
-//   };
-// }
 
 export default function GroupDetailPage() {
   const params = useParams();
@@ -91,7 +81,7 @@ export default function GroupDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [groupId]); // Empty dependency array since we use ref
+  }, [groupId]);
 
   useEffect(() => {
     if (groupId) {
@@ -100,19 +90,11 @@ export default function GroupDetailPage() {
   }, [groupId, loadGroupDetails]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error || !group) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-red-600">Error: {error || 'Group not found'}</div>
-      </div>
-    );
+    return <LoadingSpinner message={`Error: ${error || 'Group not found'}`} className="text-red-600" />;
   }
 
   return (
@@ -120,55 +102,26 @@ export default function GroupDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <button
-            onClick={() => router.back()}
-            className="mb-4 text-blue-600 hover:text-blue-800 flex items-center text-sm sm:text-base"
-          >
-            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+          <BackButton onClick={() => router.back()} className="mb-4">
             Back to Groups
-          </button>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{group.name}</h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-600">{group.description || 'No description'}</p>
+          </BackButton>
+          <PageHeader 
+            title={group.name}
+            description={group.description || 'No description'}
+          />
         </div>
 
         {/* Tabs */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-2 sm:space-x-8 px-4 sm:px-6 overflow-x-auto">
-              <button
-                onClick={() => setActiveTab('labelers')}
-                className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
-                  activeTab === 'labelers'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Labelers ({labelers.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('tags')}
-                className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
-                  activeTab === 'tags'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Tags ({tags.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('images')}
-                className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
-                  activeTab === 'images'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Images ({images.length})
-              </button>
-            </nav>
-          </div>
+        <Card>
+          <Tabs
+            tabs={[
+              { id: 'labelers', label: 'Labelers', count: labelers.length },
+              { id: 'tags', label: 'Tags', count: tags.length },
+              { id: 'images', label: 'Images', count: images.length }
+            ]}
+            activeTab={activeTab}
+            onTabChange={(tabId) => setActiveTab(tabId as 'labelers' | 'tags' | 'images')}
+          />
 
           <div className="p-4 sm:p-6">
             {/* Labelers Tab */}
@@ -176,15 +129,18 @@ export default function GroupDetailPage() {
               <div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 space-y-3 sm:space-y-0">
                   <h3 className="text-lg font-medium text-gray-900">Group Labelers</h3>
-                  <button className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                  <Button fullWidth={false} className="w-full sm:w-auto">
                     <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                     Add Labeler
-                  </button>
+                  </Button>
                 </div>
                 {labelers.length === 0 ? (
-                  <p className="text-gray-500">No labelers assigned to this group.</p>
+                  <EmptyState
+                    title="No labelers assigned"
+                    description="No labelers assigned to this group."
+                  />
                 ) : (
                   <div className="space-y-2">
                     {labelers.map((labeler) => (
@@ -295,7 +251,7 @@ export default function GroupDetailPage() {
               </div>
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

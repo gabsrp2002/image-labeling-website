@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { LoadingSpinner, PageHeader, Card, EmptyState } from '@/components';
 
 interface Group {
   id: string;
@@ -47,7 +48,7 @@ export default function LabelerGroupsPage() {
     }
   };
 
-  const loadTasks = async (groupId: string) => {
+  const loadTasks = async () => {
     try {
       // TODO: Replace with actual API call
       // Mock data for now
@@ -84,7 +85,7 @@ export default function LabelerGroupsPage() {
 
   const handleGroupSelect = (group: Group) => {
     setSelectedGroup(group);
-    loadTasks(group.id);
+    loadTasks();
   };
 
   const handleTaskStatusChange = async (taskId: string, newStatus: Task['status']) => {
@@ -100,25 +101,21 @@ export default function LabelerGroupsPage() {
 
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Groups</h1>
-          <p className="mt-2 text-gray-600">Select a group to view and work on labeling tasks.</p>
-        </div>
+        <PageHeader 
+          title="My Groups" 
+          description="Select a group to view and work on labeling tasks." 
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Groups List */}
           <div className="lg:col-span-1">
-            <div className="bg-white shadow rounded-lg">
+            <Card>
               <div className="px-4 py-5 sm:p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Available Groups</h2>
                 <div className="space-y-3">
@@ -149,13 +146,13 @@ export default function LabelerGroupsPage() {
                   ))}
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
 
           {/* Tasks List */}
           <div className="lg:col-span-2">
             {selectedGroup ? (
-              <div className="bg-white shadow rounded-lg">
+              <Card>
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex items-center justify-between mb-6">
                     <div>
@@ -211,17 +208,21 @@ export default function LabelerGroupsPage() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </Card>
             ) : (
-              <div className="bg-white shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6 text-center">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No group selected</h3>
-                  <p className="mt-1 text-sm text-gray-500">Choose a group from the left to view tasks.</p>
+              <Card>
+                <div className="px-4 py-5 sm:p-6">
+                  <EmptyState
+                    icon={
+                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    }
+                    title="No group selected"
+                    description="Choose a group from the left to view tasks."
+                  />
                 </div>
-              </div>
+              </Card>
             )}
           </div>
         </div>

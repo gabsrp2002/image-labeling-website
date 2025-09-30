@@ -1,22 +1,21 @@
 'use client';
 
 import Link from 'next/link';
+import { PageHeader, Card } from '@/components';
 
 export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="mt-2 text-gray-600">Manage your image labeling platform.</p>
-        </div>
+        <PageHeader 
+          title="Admin Dashboard" 
+          description="Manage your image labeling platform." 
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Manage Labelers Card */}
-          <Link
-            href="/admin/labelers"
-            className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200"
-          >
+          <Link href="/admin/labelers">
+            <Card hover className="overflow-hidden">
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -37,13 +36,12 @@ export default function AdminDashboardPage() {
                 <span className="text-gray-600">Create accounts, assign groups, and manage labeler access</span>
               </div>
             </div>
+            </Card>
           </Link>
 
           {/* Manage Groups Card */}
-          <Link
-            href="/admin/groups"
-            className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200"
-          >
+          <Link href="/admin/groups">
+            <Card hover className="overflow-hidden">
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -64,10 +62,11 @@ export default function AdminDashboardPage() {
                 <span className="text-gray-600">Create and organize labeling groups for different tasks</span>
               </div>
             </div>
+            </Card>
           </Link>
 
           {/* Analytics Card */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
+          <Card>
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -88,7 +87,7 @@ export default function AdminDashboardPage() {
                 <span className="text-gray-600">Track progress and performance metrics</span>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Quick Stats */}

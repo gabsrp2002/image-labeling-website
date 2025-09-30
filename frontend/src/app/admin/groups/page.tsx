@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useApiClient } from '@/utils/api';
 import { useRouter } from 'next/navigation';
+import { LoadingSpinner, PageHeader, Button, Card, Table, FormInput } from '@/components';
 
 interface Group {
   id: number;
@@ -114,58 +115,47 @@ export default function AdminGroupsPage() {
 
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-red-600">Error: {error}</div>
-      </div>
-    );
+    return <LoadingSpinner message={`Error: ${error}`} className="text-red-600" />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Manage Groups</h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-600">Create and manage labeling groups for organizing tasks and labelers.</p>
-        </div>
+        <PageHeader 
+          title="Manage Groups" 
+          description="Create and manage labeling groups for organizing tasks and labelers." 
+        />
 
-        <div className="bg-white shadow rounded-lg">
+        <Card>
           <div className="px-4 py-5 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-3 sm:space-y-0">
               <h2 className="text-lg font-medium text-gray-900">Groups</h2>
-              <button
+              <Button
                 onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                fullWidth={false}
+                className="w-full sm:w-auto"
               >
                 <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 Add Group
-              </button>
+              </Button>
             </div>
 
             {showAddForm && (
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Group</h3>
                 <form onSubmit={handleAddGroup} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Group Name</label>
-                    <input
-                      type="text"
-                      value={newGroup.name}
-                      onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
+                  <FormInput
+                    label="Group Name"
+                    value={newGroup.name}
+                    onChange={(value) => setNewGroup({ ...newGroup, name: value })}
+                    required
+                  />
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Description</label>
                     <textarea
@@ -177,19 +167,22 @@ export default function AdminGroupsPage() {
                     />
                   </div>
                   <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
-                    <button
+                    <Button
                       type="submit"
-                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                      fullWidth={false}
+                      className="w-full sm:w-auto"
                     >
                       Add Group
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
                       onClick={() => setShowAddForm(false)}
-                      className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 w-full sm:w-auto"
+                      variant="secondary"
+                      fullWidth={false}
+                      className="w-full sm:w-auto"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </form>
               </div>
@@ -226,58 +219,45 @@ export default function AdminGroupsPage() {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden sm:block overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Labelers
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {groups.map((group) => (
-                    <tr 
-                      key={group.id}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => handleGroupClick(group.id)}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {group.name}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {group.description || 'No description'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {group.labelerCount || 0} labeler{(group.labelerCount || 0) !== 1 ? 's' : ''}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteGroup(group.id);
-                          }}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="hidden sm:block">
+              <Table
+                data={groups}
+                columns={[
+                  { key: 'name', label: 'Name', className: 'font-medium text-gray-900' },
+                  { 
+                    key: 'description', 
+                    label: 'Description',
+                    render: (value) => String(value || 'No description'),
+                    className: 'text-gray-500'
+                  },
+                  { 
+                    key: 'labelerCount', 
+                    label: 'Labelers',
+                    render: (value) => `${value || 0} labeler${(value || 0) !== 1 ? 's' : ''}`,
+                    className: 'text-gray-500'
+                  },
+                  { 
+                    key: 'id', 
+                    label: 'Actions',
+                    render: (_, group) => (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteGroup(group.id);
+                        }}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    ),
+                    className: 'font-medium'
+                  }
+                ]}
+                onRowClick={(group) => handleGroupClick(group.id)}
+              />
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
