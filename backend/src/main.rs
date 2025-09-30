@@ -7,6 +7,7 @@ use image_labeling_website::routes::admin::labeler::{
 };
 use image_labeling_website::routes::admin::groups::list_groups;
 use image_labeling_website::repository::AdminRepository;
+use image_labeling_website::middleware::auth::AdminAuthMiddleware;
 use dotenv::dotenv;
 use bcrypt::hash;
 
@@ -62,6 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .route("/login", web::post().to(login))
                     .service(
                         web::scope("/admin")
+                            .wrap(AdminAuthMiddleware)
                             .route("/groups", web::get().to(list_groups))
                             .service(
                                 web::scope("/labeler")
