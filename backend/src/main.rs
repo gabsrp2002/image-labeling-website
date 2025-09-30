@@ -1,7 +1,9 @@
 use actix_web::{web, App, HttpServer};
 use image_labeling_website::database::{establish_connection, create_tables};
 use image_labeling_website::routes::auth::login;
+use image_labeling_website::repository::AdminRepository;
 use dotenv::dotenv;
+use bcrypt::hash;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -19,6 +21,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     create_tables(&db).await?;
     println!("Database tables created successfully!");
     
+    // Create default admin user if it doesn't exist
+    println!("Setting up default admin user...");
+    match AdminRepository::find_by_username(&db, "admin").await {
+        Ok(Some(_)) => {
+            println!("Admin user already exists, skipping creation.");
+        }
+        Ok(None) => {
+            // Create admin user with username "admin" and password "admin"
+            let password_hash = hash("admin", bcrypt::DEFAULT_COST)?;
+            AdminRepository::create(&db, "admin".to_string(), password_hash).await?;
+            println!("Default admin user created successfully! Username: admin, Password: admin");
+        }
+        Err(e) => {
+            eprintln!("Error checking for existing admin user: {}", e);
+            return Err(e.into());
+        }
+    }
+    
     println!("Starting HTTP server on http://127.0.0.1:8080");
     
     // Start the HTTP server
@@ -26,7 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         App::new()
             .app_data(web::Data::new(db.clone()))
             .service(
-                web::scope("/api")
+                web::scope("/api/v1")
                     .route("/login", web::post().to(login))
             )
     })
