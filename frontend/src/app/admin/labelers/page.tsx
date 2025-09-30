@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 
 interface Labeler {
   id: string;
@@ -11,27 +9,16 @@ interface Labeler {
 }
 
 export default function AdminLabelersPage() {
-  const { user, token } = useAuth();
-  const router = useRouter();
   const [labelers, setLabelers] = useState<Labeler[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newLabeler, setNewLabeler] = useState({ username: '', password: '', groups: [] });
   const [availableGroups, setAvailableGroups] = useState<string[]>([]);
 
-  // Redirect if not admin
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      router.push('/');
-    }
-  }, [user, router]);
-
   // Load labelers and groups
   useEffect(() => {
-    if (user?.role === 'admin' && token) {
-      loadData();
-    }
-  }, [user, token]);
+    loadData();
+  }, []);
 
   const loadData = async () => {
     try {
@@ -77,9 +64,6 @@ export default function AdminLabelersPage() {
     }
   };
 
-  if (!user || user.role !== 'admin') {
-    return <div>Access denied. Admin privileges required.</div>;
-  }
 
   if (isLoading) {
     return (

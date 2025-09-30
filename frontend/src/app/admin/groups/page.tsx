@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 
 interface Group {
   id: string;
@@ -12,26 +10,15 @@ interface Group {
 }
 
 export default function AdminGroupsPage() {
-  const { user, token } = useAuth();
-  const router = useRouter();
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', description: '' });
 
-  // Redirect if not admin
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      router.push('/');
-    }
-  }, [user, router]);
-
   // Load groups
   useEffect(() => {
-    if (user?.role === 'admin' && token) {
-      loadGroups();
-    }
-  }, [user, token]);
+    loadGroups();
+  }, []);
 
   const loadGroups = async () => {
     try {
@@ -77,9 +64,6 @@ export default function AdminGroupsPage() {
     }
   };
 
-  if (!user || user.role !== 'admin') {
-    return <div>Access denied. Admin privileges required.</div>;
-  }
 
   if (isLoading) {
     return (

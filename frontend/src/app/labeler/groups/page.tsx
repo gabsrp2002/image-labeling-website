@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 
 interface Group {
   id: string;
@@ -22,26 +20,15 @@ interface Task {
 }
 
 export default function LabelerGroupsPage() {
-  const { user, token } = useAuth();
-  const router = useRouter();
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect if not labeler
-  useEffect(() => {
-    if (user && user.role !== 'labeler') {
-      router.push('/');
-    }
-  }, [user, router]);
-
   // Load groups
   useEffect(() => {
-    if (user?.role === 'labeler' && token) {
-      loadGroups();
-    }
-  }, [user, token]);
+    loadGroups();
+  }, []);
 
   const loadGroups = async () => {
     try {
@@ -111,9 +98,6 @@ export default function LabelerGroupsPage() {
     }
   };
 
-  if (!user || user.role !== 'labeler') {
-    return <div>Access denied. Labeler privileges required.</div>;
-  }
 
   if (isLoading) {
     return (

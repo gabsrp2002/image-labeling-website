@@ -1,31 +1,14 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
-  const { user } = useAuth();
-  const router = useRouter();
-
-  // Redirect if not admin
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      router.push('/');
-    }
-  }, [user, router]);
-
-  if (!user || user.role !== 'admin') {
-    return <div>Access denied. Admin privileges required.</div>;
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="mt-2 text-gray-600">Welcome back, {user.username}! Manage your image labeling platform.</p>
+          <p className="mt-2 text-gray-600">Manage your image labeling platform.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
