@@ -1,10 +1,16 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Navbar() {
   const { user, logout, isLoading } = useAuth();
+  const pathname = usePathname();
+
+  const isActive = (path: string) => {
+    return pathname === path;
+  };
 
   if (isLoading) {
     return (
@@ -92,18 +98,35 @@ export default function Navbar() {
               // Admin navigation
               <>
                 <Link
+                  href="/admin/dashboard"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    isActive('/admin/dashboard')
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link
                   href="/admin/labelers"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-gray-50"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    isActive('/admin/labelers')
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
                 >
                   Manage Labelers
                 </Link>
                 <Link
                   href="/admin/groups"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-gray-50"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    isActive('/admin/groups')
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
                 >
                   Manage Groups
                 </Link>
-                <span className="text-gray-500 text-sm">Welcome, {user.username}</span>
                 <button
                   onClick={logout}
                   className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-red-50"
@@ -116,11 +139,14 @@ export default function Navbar() {
               <>
                 <Link
                   href="/labeler/groups"
-                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-gray-50"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    isActive('/labeler/groups')
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
                 >
                   My Groups
                 </Link>
-                <span className="text-gray-500 text-sm">Welcome, {user.username}</span>
                 <button
                   onClick={logout}
                   className="text-gray-700 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-red-50"
