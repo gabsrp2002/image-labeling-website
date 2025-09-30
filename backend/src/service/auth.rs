@@ -40,7 +40,7 @@ impl AuthService {
         }
 
         let token = Self::generate_jwt(admin.id, "admin")?;
-        Ok(LoginResponse { token })
+        Ok(LoginResponse { user_id: admin.id, token })
     }
 
     async fn authenticate_labeler(
@@ -61,7 +61,7 @@ impl AuthService {
         }
 
         let token = Self::generate_jwt(labeler.id, "labeler")?;
-        Ok(LoginResponse { token })
+        Ok(LoginResponse { user_id: labeler.id, token })
     }
 
     fn generate_jwt(user_id: i32, role: &str) -> Result<String, String> {

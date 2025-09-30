@@ -9,6 +9,7 @@ pub struct LoginRequest {
 
 #[derive(Debug, Serialize)]
 pub struct LoginResponse {
+    pub user_id: i32,
     pub token: String,
 }
 

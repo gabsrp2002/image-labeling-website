@@ -89,11 +89,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
       }
 
-      const data = response.data as { user_id?: string; token: string };
+      const data = response.data as { user_id: string; token: string };
       
       // Store token and user data
       const userData: User = {
-        id: data.user_id || username, // Use username as fallback ID
+        id: data.user_id,
         username,
         role,
       };
