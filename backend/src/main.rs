@@ -1,4 +1,5 @@
 use actix_web::{web, App, HttpServer};
+use actix_cors::Cors;
 use image_labeling_website::database::{establish_connection, create_tables};
 use image_labeling_website::routes::auth::login;
 use image_labeling_website::repository::AdminRepository;
@@ -43,7 +44,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     // Start the HTTP server
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allow_any_method()
+            .allow_any_header()
+            .max_age(3600);
+            
         App::new()
+            .wrap(cors)
             .app_data(web::Data::new(db.clone()))
             .service(
                 web::scope("/api/v1")
