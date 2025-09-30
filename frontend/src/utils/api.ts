@@ -102,6 +102,58 @@ export class ApiClient {
     });
   }
 
+  // Tag management methods
+  async createTag(
+    name: string,
+    description: string | null,
+    groupId: number
+  ): Promise<ApiResponse<{
+    id: number;
+    name: string;
+    description: string | null;
+  }>> {
+    return this.post('/admin/tag', {
+      name,
+      description,
+      group_id: groupId,
+    });
+  }
+
+  async getTag(tagId: number): Promise<ApiResponse<{
+    id: number;
+    name: string;
+    description: string | null;
+  }>> {
+    return this.get(`/admin/tag/${tagId}`);
+  }
+
+  async updateTag(
+    tagId: number,
+    name?: string,
+    description?: string | null
+  ): Promise<ApiResponse<{
+    id: number;
+    name: string;
+    description: string | null;
+  }>> {
+    return this.put(`/admin/tag/${tagId}`, {
+      name,
+      description,
+    });
+  }
+
+  async deleteTag(tagId: number): Promise<ApiResponse<null>> {
+    return this.delete(`/admin/tag/${tagId}`);
+  }
+
+  async getTagsByGroup(groupId: number): Promise<ApiResponse<Array<{
+    id: number;
+    name: string;
+    description: string | null;
+  }>>> {
+    return this.get(`/admin/tag/group/${groupId}`);
+  }
+
   // Helper method to convert file to base64
   static async fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {

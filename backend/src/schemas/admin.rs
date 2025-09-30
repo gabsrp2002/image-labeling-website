@@ -83,6 +83,19 @@ pub struct UploadImageRequest {
     pub group_id: i32,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct CreateTagRequest {
+    pub name: String,
+    pub description: Option<String>,
+    pub group_id: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateTagRequest {
+    pub name: Option<String>,
+    pub description: Option<String>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct ImageUploadResponse {
     pub id: i32,

@@ -1,11 +1,11 @@
 use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, ColumnTrait, QueryFilter};
 use bcrypt::hash;
-use crate::repository::{LabelerRepository, GroupRepository, ImageRepository};
+use crate::repository::{LabelerRepository, GroupRepository, ImageRepository, TagRepository};
 use crate::schemas::admin::{
     CreateLabelerRequest, UpdateLabelerRequest, LabelerResponse, 
     LabelerListResponse, GroupResponse, GroupListResponse, ApiResponse,
     CreateGroupRequest, GroupDetailResponse, SimpleLabelerResponse, TagResponse, ImageResponse,
-    UploadImageRequest, ImageUploadResponse
+    UploadImageRequest, ImageUploadResponse, CreateTagRequest, UpdateTagRequest
 };
 
 pub struct AdminService;
@@ -468,6 +468,177 @@ impl AdminService {
                 })
             }
             Err(e) => Err(format!("Failed to upload image: {}", e)),
+        }
+    }
+
+    pub async fn create_tag(
+        db: &DatabaseConnection,
+        request: CreateTagRequest,
+    ) -> Result<ApiResponse<TagResponse>, String> {
+        // Check if tag with same name already exists in this group
+        match TagRepository::find_by_name_and_group(db, &request.name, request.group_id).await {
+            Ok(Some(_)) => {
+                return Ok(ApiResponse {
+                    success: false,
+                    message: "Tag with this name already exists in this group".to_string(),
+                    data: None,
+                });
+            }
+            Ok(None) => {} // Continue with creation
+            Err(e) => return Err(format!("Database error: {}", e)),
+        }
+
+        // Create the tag
+        match TagRepository::create(db, request.name, request.description, request.group_id).await {
+            Ok(tag) => {
+                let response = TagResponse {
+                    id: tag.id,
+                    name: tag.name,
+                    description: tag.description,
+                };
+                Ok(ApiResponse {
+                    success: true,
+                    message: "Tag created successfully".to_string(),
+                    data: Some(response),
+                })
+            }
+            Err(e) => Err(format!("Failed to create tag: {}", e)),
+        }
+    }
+
+    pub async fn get_tag(
+        db: &DatabaseConnection,
+        tag_id: i32,
+    ) -> Result<ApiResponse<TagResponse>, String> {
+        match TagRepository::find_by_id(db, tag_id).await {
+            Ok(Some(tag)) => {
+                let response = TagResponse {
+                    id: tag.id,
+                    name: tag.name,
+                    description: tag.description,
+                };
+                Ok(ApiResponse {
+                    success: true,
+                    message: "Tag retrieved successfully".to_string(),
+                    data: Some(response),
+                })
+            }
+            Ok(None) => {
+                Ok(ApiResponse {
+                    success: false,
+                    message: "Tag not found".to_string(),
+                    data: None,
+                })
+            }
+            Err(e) => Err(format!("Database error: {}", e)),
+        }
+    }
+
+    pub async fn list_tags_by_group(
+        db: &DatabaseConnection,
+        group_id: i32,
+    ) -> Result<ApiResponse<Vec<TagResponse>>, String> {
+        match TagRepository::get_by_group(db, group_id).await {
+            Ok(tags) => {
+                let tag_responses: Vec<TagResponse> = tags
+                    .into_iter()
+                    .map(|tag| TagResponse {
+                        id: tag.id,
+                        name: tag.name,
+                        description: tag.description,
+                    })
+                    .collect();
+
+                Ok(ApiResponse {
+                    success: true,
+                    message: "Tags retrieved successfully".to_string(),
+                    data: Some(tag_responses),
+                })
+            }
+            Err(e) => Err(format!("Database error: {}", e)),
+        }
+    }
+
+    pub async fn update_tag(
+        db: &DatabaseConnection,
+        tag_id: i32,
+        request: UpdateTagRequest,
+    ) -> Result<ApiResponse<TagResponse>, String> {
+        // Check if tag exists
+        let tag = match TagRepository::find_by_id(db, tag_id).await {
+            Ok(Some(tag)) => tag,
+            Ok(None) => {
+                return Ok(ApiResponse {
+                    success: false,
+                    message: "Tag not found".to_string(),
+                    data: None,
+                });
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        };
+
+        // Check if new name conflicts with existing tag in the same group
+        if let Some(new_name) = &request.name {
+            if new_name != &tag.name {
+                match TagRepository::find_by_name_and_group(db, new_name, tag.group_id).await {
+                    Ok(Some(_)) => {
+                        return Ok(ApiResponse {
+                            success: false,
+                            message: "Tag with this name already exists in this group".to_string(),
+                            data: None,
+                        });
+                    }
+                    Ok(None) => {} // Name is available
+                    Err(e) => return Err(format!("Database error: {}", e)),
+                }
+            }
+        }
+
+        // Update the tag
+        match TagRepository::update(db, tag_id, request.name, request.description).await {
+            Ok(updated_tag) => {
+                let response = TagResponse {
+                    id: updated_tag.id,
+                    name: updated_tag.name,
+                    description: updated_tag.description,
+                };
+                Ok(ApiResponse {
+                    success: true,
+                    message: "Tag updated successfully".to_string(),
+                    data: Some(response),
+                })
+            }
+            Err(e) => Err(format!("Failed to update tag: {}", e)),
+        }
+    }
+
+    pub async fn delete_tag(
+        db: &DatabaseConnection,
+        tag_id: i32,
+    ) -> Result<ApiResponse<()>, String> {
+        // Check if tag exists
+        match TagRepository::find_by_id(db, tag_id).await {
+            Ok(Some(_)) => {} // Tag exists, continue with deletion
+            Ok(None) => {
+                return Ok(ApiResponse {
+                    success: false,
+                    message: "Tag not found".to_string(),
+                    data: None,
+                });
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        }
+
+        // Delete the tag
+        match TagRepository::delete(db, tag_id).await {
+            Ok(_) => {
+                Ok(ApiResponse {
+                    success: true,
+                    message: "Tag deleted successfully".to_string(),
+                    data: Some(()),
+                })
+            }
+            Err(e) => Err(format!("Failed to delete tag: {}", e)),
         }
     }
 }

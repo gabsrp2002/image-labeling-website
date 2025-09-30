@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useApiClient, ApiClient } from '@/utils/api';
-import { LoadingSpinner, PageHeader, BackButton, Card, Tabs, Button, EmptyState, ImageUploader } from '@/components';
+import { LoadingSpinner, PageHeader, BackButton, Card, Tabs, Button, EmptyState, ImageUploader, TagModal } from '@/components';
 
 interface Group {
   id: number;
@@ -58,6 +58,12 @@ export default function GroupDetailPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  
+  // Tag management state
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
+  const [tagError, setTagError] = useState<string | null>(null);
+  const [tagSuccess, setTagSuccess] = useState<string | null>(null);
 
   // Update ref when apiClient changes
   useEffect(() => {
@@ -151,6 +157,56 @@ export default function GroupDetailPage() {
     }
   }, [selectedFiles, groupId, handleUploadComplete]);
 
+  // Tag management functions
+  const handleCreateTag = useCallback(async (tagData: { name: string; description: string }) => {
+    setIsCreatingTag(true);
+    setTagError(null);
+    setTagSuccess(null);
+
+    try {
+      const response = await apiClientRef.current.createTag(
+        tagData.name,
+        tagData.description || null,
+        groupId
+      );
+
+      if (response.success && response.data) {
+        setTagSuccess('Tag created successfully!');
+        setIsTagModalOpen(false);
+        // Reload group details to show new tag
+        loadGroupDetails();
+      } else {
+        setTagError(response.error || 'Failed to create tag');
+      }
+    } catch (error) {
+      console.error('Error creating tag:', error);
+      setTagError('Failed to create tag. Please try again.');
+    } finally {
+      setIsCreatingTag(false);
+    }
+  }, [groupId, loadGroupDetails]);
+
+  const handleDeleteTag = useCallback(async (tagId: number) => {
+    if (!confirm('Are you sure you want to delete this tag?')) {
+      return;
+    }
+
+    try {
+      const response = await apiClientRef.current.deleteTag(tagId);
+
+      if (response.success) {
+        setTagSuccess('Tag deleted successfully!');
+        // Reload group details to remove deleted tag
+        loadGroupDetails();
+      } else {
+        setTagError(response.error || 'Failed to delete tag');
+      }
+    } catch (error) {
+      console.error('Error deleting tag:', error);
+      setTagError('Failed to delete tag. Please try again.');
+    }
+  }, [loadGroupDetails]);
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -223,15 +279,58 @@ export default function GroupDetailPage() {
               <div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 space-y-3 sm:space-y-0">
                   <h3 className="text-lg font-medium text-gray-900">Group Tags</h3>
-                  <button className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                  <Button 
+                    onClick={() => setIsTagModalOpen(true)}
+                    fullWidth={false}
+                    className="w-full sm:w-auto"
+                  >
                     <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                     Add Tag
-                  </button>
+                  </Button>
                 </div>
+
+                {/* Tag Messages */}
+                {tagError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-red-600">{tagError}</p>
+                      <button
+                        onClick={() => setTagError(null)}
+                        className="ml-3 text-red-400 hover:text-red-600 transition-colors"
+                        aria-label="Dismiss error message"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {tagSuccess && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-green-600">{tagSuccess}</p>
+                      <button
+                        onClick={() => setTagSuccess(null)}
+                        className="ml-3 text-green-400 hover:text-green-600 transition-colors"
+                        aria-label="Dismiss success message"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {tags.length === 0 ? (
-                  <p className="text-gray-500">No tags defined for this group.</p>
+                  <EmptyState
+                    title="No tags defined"
+                    description="No tags have been created for this group yet."
+                  />
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {tags.map((tag) => (
@@ -242,11 +341,9 @@ export default function GroupDetailPage() {
                       >
                         <span className="truncate max-w-32">{tag.name}</span>
                         <button
-                          onClick={() => {
-                            // TODO: Implement remove tag functionality
-                            console.log('Remove tag:', tag.id);
-                          }}
+                          onClick={() => handleDeleteTag(tag.id)}
                           className="ml-2 text-blue-600 hover:text-blue-800"
+                          title="Delete tag"
                         >
                           <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -363,6 +460,15 @@ export default function GroupDetailPage() {
             )}
           </div>
         </Card>
+
+        {/* Tag Modal */}
+        <TagModal
+          isOpen={isTagModalOpen}
+          onClose={() => setIsTagModalOpen(false)}
+          onSubmit={handleCreateTag}
+          isLoading={isCreatingTag}
+          title="Add New Tag"
+        />
       </div>
     </div>
   );
