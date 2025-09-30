@@ -41,9 +41,11 @@ pub async fn create_tables(db: &DatabaseConnection) -> Result<(), DbErr> {
     let create_image_table = r#"
         CREATE TABLE IF NOT EXISTS image (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            path TEXT NOT NULL,
-            name TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            filetype TEXT NOT NULL,
+            base64_data TEXT NOT NULL,
             group_id INTEGER NOT NULL,
+            uploaded_at DATETIME NOT NULL,
             FOREIGN KEY (group_id) REFERENCES "group"(id)
         )
     "#;

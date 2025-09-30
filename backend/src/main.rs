@@ -5,7 +5,7 @@ use image_labeling_website::routes::auth::login;
 use image_labeling_website::routes::admin::labeler::{
     create_labeler, get_labeler, list_labelers, update_labeler, delete_labeler
 };
-use image_labeling_website::routes::admin::groups::{list_groups, create_group, delete_group};
+use image_labeling_website::routes::admin::groups::{list_groups, create_group, get_group_details, delete_group};
 use image_labeling_website::repository::AdminRepository;
 use image_labeling_website::middleware::auth::AdminAuthMiddleware;
 use dotenv::dotenv;
@@ -66,6 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .wrap(AdminAuthMiddleware)
                             .route("/groups", web::get().to(list_groups))
                             .route("/groups", web::post().to(create_group))
+                            .route("/groups/{id}", web::get().to(get_group_details))
                             .route("/groups/{id}", web::delete().to(delete_group))
                             .service(
                                 web::scope("/labeler")

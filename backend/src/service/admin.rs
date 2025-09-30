@@ -4,7 +4,7 @@ use crate::repository::{LabelerRepository, GroupRepository};
 use crate::schemas::admin::{
     CreateLabelerRequest, UpdateLabelerRequest, LabelerResponse, 
     LabelerListResponse, GroupResponse, GroupListResponse, ApiResponse,
-    CreateGroupRequest
+    CreateGroupRequest, GroupDetailResponse, SimpleLabelerResponse, TagResponse, ImageResponse
 };
 
 pub struct AdminService;
@@ -330,5 +330,90 @@ impl AdminService {
             }
             Err(e) => Err(format!("Failed to delete group: {}", e)),
         }
+    }
+
+    pub async fn get_group_details(
+        db: &DatabaseConnection,
+        group_id: i32,
+    ) -> Result<ApiResponse<GroupDetailResponse>, String> {
+        // Get the group
+        let group = match GroupRepository::find_by_id(db, group_id).await {
+            Ok(Some(group)) => group,
+            Ok(None) => {
+                return Ok(ApiResponse {
+                    success: false,
+                    message: "Group not found".to_string(),
+                    data: None,
+                });
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        };
+
+        // Get group labelers
+        let labelers = match GroupRepository::get_labelers(db, group_id).await {
+            Ok(labelers) => labelers
+                .into_iter()
+                .map(|labeler| SimpleLabelerResponse {
+                    id: labeler.id,
+                    username: labeler.username,
+                })
+                .collect(),
+            Err(e) => {
+                eprintln!("Warning: Failed to load labelers for group {}: {}", group_id, e);
+                Vec::new()
+            }
+        };
+
+        // Get group tags
+        let tags = match GroupRepository::get_possible_tags(db, group_id).await {
+            Ok(tags) => tags
+                .into_iter()
+                .map(|tag| TagResponse {
+                    id: tag.id,
+                    name: tag.name,
+                    description: tag.description,
+                })
+                .collect(),
+            Err(e) => {
+                eprintln!("Warning: Failed to load tags for group {}: {}", group_id, e);
+                Vec::new()
+            }
+        };
+
+        // Get group images
+        let images = match GroupRepository::get_images(db, group_id).await {
+            Ok(images) => images
+                .into_iter()
+                .map(|image| ImageResponse {
+                    id: image.id,
+                    filename: image.filename,
+                    filetype: image.filetype,
+                    uploaded_at: image.uploaded_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+                })
+                .collect(),
+            Err(e) => {
+                eprintln!("Warning: Failed to load images for group {}: {}", group_id, e);
+                Vec::new()
+            }
+        };
+
+        let group_response = GroupResponse {
+            id: group.id,
+            name: group.name,
+            description: group.description,
+        };
+
+        let response = GroupDetailResponse {
+            group: group_response,
+            labelers,
+            tags,
+            images,
+        };
+
+        Ok(ApiResponse {
+            success: true,
+            message: "Group details retrieved successfully".to_string(),
+            data: Some(response),
+        })
     }
 }

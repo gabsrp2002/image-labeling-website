@@ -47,6 +47,35 @@ pub struct LabelerListResponse {
 }
 
 #[derive(Debug, Serialize)]
+pub struct SimpleLabelerResponse {
+    pub id: i32,
+    pub username: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TagResponse {
+    pub id: i32,
+    pub name: String,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ImageResponse {
+    pub id: i32,
+    pub filename: String,
+    pub filetype: String,
+    pub uploaded_at: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GroupDetailResponse {
+    pub group: GroupResponse,
+    pub labelers: Vec<SimpleLabelerResponse>,
+    pub tags: Vec<TagResponse>,
+    pub images: Vec<ImageResponse>,
+}
+
+#[derive(Debug, Serialize)]
 pub struct ApiResponse<T> {
     pub success: bool,
     pub message: String,

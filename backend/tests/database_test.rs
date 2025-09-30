@@ -79,8 +79,9 @@ async fn test_database_operations(db: &sea_orm::DatabaseConnection) -> Result<()
     // Create a test image
     let image = ImageRepository::create(
         db,
-        "/path/to/test/image.jpg".to_string(),
         "test_image.jpg".to_string(),
+        "jpg".to_string(),
+        "base64_encoded_image_data".to_string(),
         group.id,
     ).await?;
     println!("Created image: {:?}", image);

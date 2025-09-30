@@ -15,13 +15,15 @@ async fn test_image_operations() -> Result<(), Box<dyn std::error::Error>> {
     // Test image creation
     let image = ImageRepository::create(
         &test_db.connection,
-        "/path/to/test.jpg".to_string(),
         "test.jpg".to_string(),
+        "jpg".to_string(),
+        "base64_encoded_image_data".to_string(),
         group.id,
     ).await?;
     
-    assert_eq!(image.path, "/path/to/test.jpg");
-    assert_eq!(image.name, "test.jpg");
+    assert_eq!(image.filename, "test.jpg");
+    assert_eq!(image.filetype, "jpg");
+    assert_eq!(image.base64_data, "base64_encoded_image_data");
     assert_eq!(image.group_id, group.id);
     
     // Test getting images by group

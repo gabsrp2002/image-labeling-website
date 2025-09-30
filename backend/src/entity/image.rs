@@ -6,9 +6,11 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub path: String,
-    pub name: String,
+    pub filename: String,
+    pub filetype: String,
+    pub base64_data: String,
     pub group_id: i32,
+    pub uploaded_at: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

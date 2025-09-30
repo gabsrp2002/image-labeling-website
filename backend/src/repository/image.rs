@@ -7,14 +7,17 @@ pub struct ImageRepository;
 impl ImageRepository {
     pub async fn create(
         db: &DatabaseConnection,
-        path: String,
-        name: String,
+        filename: String,
+        filetype: String,
+        base64_data: String,
         group_id: i32,
     ) -> Result<ImageModel, DbErr> {
         let image = ImageActiveModel {
-            path: Set(path),
-            name: Set(name),
+            filename: Set(filename),
+            filetype: Set(filetype),
+            base64_data: Set(base64_data),
             group_id: Set(group_id),
+            uploaded_at: Set(chrono::Utc::now()),
             ..Default::default()
         };
         
@@ -51,19 +54,23 @@ impl ImageRepository {
     pub async fn update(
         db: &DatabaseConnection,
         id: i32,
-        path: Option<String>,
-        name: Option<String>,
+        filename: Option<String>,
+        filetype: Option<String>,
+        base64_data: Option<String>,
         group_id: Option<i32>,
     ) -> Result<ImageModel, DbErr> {
         let image = Image::find_by_id(id).one(db).await?;
         match image {
             Some(image) => {
                 let mut image: ImageActiveModel = image.into();
-                if let Some(path) = path {
-                    image.path = Set(path);
+                if let Some(filename) = filename {
+                    image.filename = Set(filename);
                 }
-                if let Some(name) = name {
-                    image.name = Set(name);
+                if let Some(filetype) = filetype {
+                    image.filetype = Set(filetype);
+                }
+                if let Some(base64_data) = base64_data {
+                    image.base64_data = Set(base64_data);
                 }
                 if let Some(group_id) = group_id {
                     image.group_id = Set(group_id);

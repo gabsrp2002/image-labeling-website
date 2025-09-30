@@ -20,8 +20,9 @@ async fn test_multiple_tags_assignment() -> Result<(), Box<dyn std::error::Error
     
     let image = ImageRepository::create(
         &test_db.connection,
-        "/path/to/test.jpg".to_string(),
         "test.jpg".to_string(),
+        "jpg".to_string(),
+        "base64_encoded_image_data".to_string(),
         group.id,
     ).await?;
     

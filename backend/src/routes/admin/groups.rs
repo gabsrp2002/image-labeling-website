@@ -30,6 +30,21 @@ pub async fn create_group(
     }
 }
 
+pub async fn get_group_details(
+    db: web::Data<DatabaseConnection>,
+    path: web::Path<i32>,
+) -> Result<HttpResponse> {
+    let group_id = path.into_inner();
+    match AdminService::get_group_details(&db, group_id).await {
+        Ok(response) => Ok(HttpResponse::Ok().json(response)),
+        Err(e) => Ok(HttpResponse::InternalServerError().json(ApiResponse::<()> {
+            success: false,
+            message: e,
+            data: None,
+        })),
+    }
+}
+
 pub async fn delete_group(
     db: web::Data<DatabaseConnection>,
     path: web::Path<i32>,
