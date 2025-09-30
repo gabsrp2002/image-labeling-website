@@ -309,26 +309,19 @@ export default function AdminLabelersPage() {
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Labeler</h3>
                 <form onSubmit={handleUpdateLabeler} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Username</label>
-                    <input
-                      type="text"
-                      value={editLabeler.username}
-                      onChange={(e) => setEditLabeler({ ...editLabeler, username: e.target.value })}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">New Password (leave blank to keep current)</label>
-                    <input
-                      type="password"
-                      value={editLabeler.password}
-                      onChange={(e) => setEditLabeler({ ...editLabeler, password: e.target.value })}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter new password or leave blank"
-                    />
-                  </div>
+                  <FormInput
+                    label="Username"
+                    value={editLabeler.username}
+                    onChange={(value) => setEditLabeler({ ...editLabeler, username: value })}
+                    required
+                  />
+                  <FormInput
+                    label="New Password (leave blank to keep current)"
+                    type="password"
+                    value={editLabeler.password}
+                    onChange={(value) => setEditLabeler({ ...editLabeler, password: value })}
+                    placeholder="Enter new password or leave blank"
+                  />
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Groups</label>
                     <div className="mt-2 space-y-2">
@@ -352,38 +345,53 @@ export default function AdminLabelersPage() {
                     </div>
                   </div>
                   <div className="flex space-x-3">
-                    <button
-                      type="submit"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                    >
+                    <Button type="submit">
                       Update Labeler
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
                       onClick={() => {
                         setShowEditForm(false);
                         setEditingLabeler(null);
                         setEditLabeler({ username: '', password: '', group_ids: [] });
                       }}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      variant="secondary"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </form>
               </div>
             )}
 
-            <Table
-              data={labelers}
-              columns={[
-                { key: 'username', label: 'Username', className: 'font-medium text-gray-900' },
-                { 
-                  key: 'group_ids', 
-                  label: 'Groups',
-                  render: (groupIds) => (
+            {/* Mobile Card View */}
+            <div className="block sm:hidden space-y-4">
+              {labelers.map((labeler) => (
+                <div
+                  key={labeler.id}
+                  className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-medium text-gray-900">{labeler.username}</h3>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEditLabeler(labeler)}
+                        className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteLabeler(labeler.id)}
+                        className="text-red-600 hover:text-red-900 text-sm font-medium"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500 mb-2">Groups:</p>
                     <div className="flex flex-wrap gap-1">
-                      {(groupIds as number[]).map((groupId: number) => {
+                      {labeler.group_ids.map((groupId) => {
                         const group = groups.find(g => g.id === groupId);
                         return group ? (
                           <span
@@ -394,36 +402,68 @@ export default function AdminLabelersPage() {
                           </span>
                         ) : null;
                       })}
-                      {(groupIds as number[]).length === 0 && (
+                      {labeler.group_ids.length === 0 && (
                         <span className="text-gray-400 text-xs">No groups assigned</span>
                       )}
                     </div>
-                  ),
-                  className: 'text-gray-500'
-                },
-                { 
-                  key: 'id', 
-                  label: 'Actions',
-                  render: (_, labeler) => (
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEditLabeler(labeler)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteLabeler(labeler.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ),
-                  className: 'font-medium'
-                }
-              ]}
-            />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block">
+              <Table
+                data={labelers}
+                columns={[
+                  { key: 'username', label: 'Username', className: 'font-medium text-gray-900' },
+                  { 
+                    key: 'group_ids', 
+                    label: 'Groups',
+                    render: (groupIds) => (
+                      <div className="flex flex-wrap gap-1">
+                        {(groupIds as number[]).map((groupId: number) => {
+                          const group = groups.find(g => g.id === groupId);
+                          return group ? (
+                            <span
+                              key={groupId}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                            >
+                              {group.name}
+                            </span>
+                          ) : null;
+                        })}
+                        {(groupIds as number[]).length === 0 && (
+                          <span className="text-gray-400 text-xs">No groups assigned</span>
+                        )}
+                      </div>
+                    ),
+                    className: 'text-gray-500'
+                  },
+                  { 
+                    key: 'id', 
+                    label: 'Actions',
+                    render: (_, labeler) => (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditLabeler(labeler)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteLabeler(labeler.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ),
+                    className: 'font-medium'
+                  }
+                ]}
+              />
+            </div>
           </div>
         </Card>
       </div>
