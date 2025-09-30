@@ -1,9 +1,7 @@
-mod common;
-
 use image_labeling_website::service::auth::AuthService;
 use image_labeling_website::schemas::auth::LoginRequest;
 use image_labeling_website::repository::*;
-use common::test_utils::setup_test_db;
+use super::super::common::test_utils::setup_test_db;
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use image_labeling_website::schemas::auth::Claims;
 use bcrypt::hash;

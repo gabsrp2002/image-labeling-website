@@ -1,9 +1,7 @@
-mod common;
-
 use actix_web::{web, App, test, http::StatusCode};
 use image_labeling_website::routes::auth::login;
 use image_labeling_website::repository::*;
-use common::test_utils::setup_test_db;
+use super::super::common::test_utils::setup_test_db;
 use bcrypt::hash;
 use std::env;
 

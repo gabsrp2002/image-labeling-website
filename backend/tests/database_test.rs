@@ -1,7 +1,7 @@
 mod common;
 
 use image_labeling_website::repository::*;
-use common::test_utils::setup_test_db;
+use crate::common::test_utils::setup_test_db;
 
 #[tokio::test]
 async fn test_database_setup() -> Result<(), Box<dyn std::error::Error>> {
