@@ -1,8 +1,8 @@
-# Image Labeling Website API
+# Image Labeling Website API documentation
 
 ## Login Endpoint
 
-### POST /api/login
+### POST /api/v1/login
 
 Authenticates a user and returns a JWT token.
 
@@ -30,7 +30,7 @@ Authenticates a user and returns a JWT token.
 **Example Usage:**
 
 ```bash
-curl -X POST http://127.0.0.1:8080/api/login \
+curl -X POST http://127.0.0.1:8080/api/v1/login \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin_user",
@@ -39,7 +39,7 @@ curl -X POST http://127.0.0.1:8080/api/login \
   }'
 ```
 
-## Running the Server
+# Running the Server
 
 1. Edit the `.env` file and set your JWT secret:
 ```bash
