@@ -82,6 +82,40 @@ export class ApiClient {
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
+
+  async uploadImage(
+    filename: string,
+    filetype: string,
+    base64Data: string,
+    groupId: number
+  ): Promise<ApiResponse<{
+    id: number;
+    filename: string;
+    filetype: string;
+    uploaded_at: string;
+  }>> {
+    return this.post('/admin/image', {
+      filename,
+      filetype,
+      base64_data: base64Data,
+      group_id: groupId,
+    });
+  }
+
+  // Helper method to convert file to base64
+  static async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove the data:image/...;base64, prefix
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
 }
 
 // Hook to get API client with current auth token

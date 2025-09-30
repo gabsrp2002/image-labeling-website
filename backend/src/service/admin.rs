@@ -1,10 +1,11 @@
 use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, ColumnTrait, QueryFilter};
 use bcrypt::hash;
-use crate::repository::{LabelerRepository, GroupRepository};
+use crate::repository::{LabelerRepository, GroupRepository, ImageRepository};
 use crate::schemas::admin::{
     CreateLabelerRequest, UpdateLabelerRequest, LabelerResponse, 
     LabelerListResponse, GroupResponse, GroupListResponse, ApiResponse,
-    CreateGroupRequest, GroupDetailResponse, SimpleLabelerResponse, TagResponse, ImageResponse
+    CreateGroupRequest, GroupDetailResponse, SimpleLabelerResponse, TagResponse, ImageResponse,
+    UploadImageRequest, ImageUploadResponse
 };
 
 pub struct AdminService;
@@ -415,5 +416,58 @@ impl AdminService {
             message: "Group details retrieved successfully".to_string(),
             data: Some(response),
         })
+    }
+
+    pub async fn upload_image(
+        db: &DatabaseConnection,
+        request: UploadImageRequest,
+    ) -> Result<ApiResponse<ImageUploadResponse>, String> {
+        // Validate file type
+        let allowed_types = ["png", "jpeg", "jpg"];
+        let file_extension = request.filetype.to_lowercase();
+        if !allowed_types.contains(&file_extension.as_str()) {
+            return Ok(ApiResponse {
+                success: false,
+                message: "Invalid file type. Only PNG and JPEG files are allowed.".to_string(),
+                data: None,
+            });
+        }
+
+        // Verify group exists
+        match GroupRepository::find_by_id(db, request.group_id).await {
+            Ok(Some(_)) => {} // Group exists, continue
+            Ok(None) => {
+                return Ok(ApiResponse {
+                    success: false,
+                    message: "Group not found".to_string(),
+                    data: None,
+                });
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        }
+
+        // Create the image
+        match ImageRepository::create(
+            db,
+            request.filename,
+            request.filetype,
+            request.base64_data,
+            request.group_id,
+        ).await {
+            Ok(image) => {
+                let response = ImageUploadResponse {
+                    id: image.id,
+                    filename: image.filename,
+                    filetype: image.filetype,
+                    uploaded_at: image.uploaded_at.format("%Y-%m-%d %H:%M:%S").to_string(),
+                };
+                Ok(ApiResponse {
+                    success: true,
+                    message: "Image uploaded successfully".to_string(),
+                    data: Some(response),
+                })
+            }
+            Err(e) => Err(format!("Failed to upload image: {}", e)),
+        }
     }
 }

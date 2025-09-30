@@ -75,6 +75,22 @@ pub struct GroupDetailResponse {
     pub images: Vec<ImageResponse>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct UploadImageRequest {
+    pub filename: String,
+    pub filetype: String,
+    pub base64_data: String,
+    pub group_id: i32,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ImageUploadResponse {
+    pub id: i32,
+    pub filename: String,
+    pub filetype: String,
+    pub uploaded_at: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct ApiResponse<T> {
     pub success: bool,

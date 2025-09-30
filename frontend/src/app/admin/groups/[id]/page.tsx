@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useApiClient } from '@/utils/api';
-import { LoadingSpinner, PageHeader, BackButton, Card, Tabs, Button, EmptyState } from '@/components';
+import { useApiClient, ApiClient } from '@/utils/api';
+import { LoadingSpinner, PageHeader, BackButton, Card, Tabs, Button, EmptyState, ImageUploader } from '@/components';
 
 interface Group {
   id: number;
@@ -54,6 +54,10 @@ export default function GroupDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'labelers' | 'tags' | 'images'>('labelers');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   // Update ref when apiClient changes
   useEffect(() => {
@@ -88,6 +92,64 @@ export default function GroupDetailPage() {
       loadGroupDetails();
     }
   }, [groupId, loadGroupDetails]);
+
+  const handleImagesSelected = useCallback((files: File[]) => {
+    setSelectedFiles(files);
+    setUploadError(null);
+    setUploadSuccess(null);
+  }, []);
+
+  const handleUploadComplete = useCallback(() => {
+    setSelectedFiles([]);
+    setUploadSuccess('Images uploaded successfully!');
+    setUploadError(null);
+    // Reload group details to show new images
+    loadGroupDetails();
+  }, [loadGroupDetails]);
+
+  const handleUploadError = useCallback((error: string) => {
+    setUploadError(error);
+    setUploadSuccess(null);
+  }, []);
+
+  const uploadImages = useCallback(async () => {
+    if (selectedFiles.length === 0) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+    setUploadSuccess(null);
+
+    try {
+      const uploadPromises = selectedFiles.map(async (file) => {
+        const base64Data = await ApiClient.fileToBase64(file);
+        const filetype = file.type.split('/')[1]; // Extract extension from MIME type
+        
+        return apiClientRef.current.uploadImage(
+          file.name,
+          filetype,
+          base64Data,
+          groupId
+        );
+      });
+
+      const results = await Promise.all(uploadPromises);
+      
+      // Check if all uploads were successful
+      const failedUploads = results.filter(result => !result.success);
+      
+      if (failedUploads.length > 0) {
+        const errorMessages = failedUploads.map(result => result.error).join(', ');
+        setUploadError(`Some uploads failed: ${errorMessages}`);
+      } else {
+        handleUploadComplete();
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError('Failed to upload images. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  }, [selectedFiles, groupId, handleUploadComplete]);
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -209,13 +271,62 @@ export default function GroupDetailPage() {
               <div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 space-y-3 sm:space-y-0">
                   <h3 className="text-lg font-medium text-gray-900">Group Images</h3>
-                  <button className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-                    <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Upload Images
-                  </button>
+                  <ImageUploader
+                    onImagesSelected={handleImagesSelected}
+                    onUploadComplete={handleUploadComplete}
+                    onUploadError={handleUploadError}
+                    isUploading={isUploading}
+                  />
                 </div>
+
+                {/* Upload Messages */}
+                {uploadError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-red-600">{uploadError}</p>
+                      <button
+                        onClick={() => setUploadError(null)}
+                        className="ml-3 text-red-400 hover:text-red-600 transition-colors"
+                        aria-label="Dismiss error message"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {uploadSuccess && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-green-600">{uploadSuccess}</p>
+                      <button
+                        onClick={() => setUploadSuccess(null)}
+                        className="ml-3 text-green-400 hover:text-green-600 transition-colors"
+                        aria-label="Dismiss success message"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Upload Button */}
+                {selectedFiles.length > 0 && (
+                  <div className="mb-4 flex justify-end">
+                    <Button
+                      onClick={uploadImages}
+                      disabled={isUploading}
+                      fullWidth={false}
+                      className="w-full sm:w-auto"
+                    >
+                      {isUploading ? 'Uploading...' : `Upload ${selectedFiles.length} Image${selectedFiles.length !== 1 ? 's' : ''}`}
+                    </Button>
+                  </div>
+                )}
                 {images.length === 0 ? (
                   <p className="text-gray-500">No images assigned to this group.</p>
                 ) : (
