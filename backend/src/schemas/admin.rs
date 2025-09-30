@@ -14,6 +14,12 @@ pub struct UpdateLabelerRequest {
     pub group_ids: Option<Vec<i32>>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct CreateGroupRequest {
+    pub name: String,
+    pub description: Option<String>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct LabelerResponse {
     pub id: i32,

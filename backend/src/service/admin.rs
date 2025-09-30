@@ -3,7 +3,8 @@ use bcrypt::hash;
 use crate::repository::{LabelerRepository, GroupRepository};
 use crate::schemas::admin::{
     CreateLabelerRequest, UpdateLabelerRequest, LabelerResponse, 
-    LabelerListResponse, GroupResponse, GroupListResponse, ApiResponse
+    LabelerListResponse, GroupResponse, GroupListResponse, ApiResponse,
+    CreateGroupRequest
 };
 
 pub struct AdminService;
@@ -251,6 +252,27 @@ impl AdminService {
         }
     }
 
+    pub async fn create_group(
+        db: &DatabaseConnection,
+        request: CreateGroupRequest,
+    ) -> Result<ApiResponse<GroupResponse>, String> {
+        match GroupRepository::create(db, request.name, request.description).await {
+            Ok(group) => {
+                let response = GroupResponse {
+                    id: group.id,
+                    name: group.name,
+                    description: group.description,
+                };
+                Ok(ApiResponse {
+                    success: true,
+                    message: "Group created successfully".to_string(),
+                    data: Some(response),
+                })
+            }
+            Err(e) => Err(format!("Failed to create group: {}", e)),
+        }
+    }
+
     pub async fn list_groups(
         db: &DatabaseConnection,
     ) -> Result<ApiResponse<GroupListResponse>, String> {
@@ -277,6 +299,36 @@ impl AdminService {
                 })
             }
             Err(e) => Err(format!("Database error: {}", e)),
+        }
+    }
+
+    pub async fn delete_group(
+        db: &DatabaseConnection,
+        group_id: i32,
+    ) -> Result<ApiResponse<()>, String> {
+        // Check if group exists
+        match GroupRepository::find_by_id(db, group_id).await {
+            Ok(Some(_)) => {} // Group exists, continue with deletion
+            Ok(None) => {
+                return Ok(ApiResponse {
+                    success: false,
+                    message: "Group not found".to_string(),
+                    data: None,
+                });
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        }
+
+        // Delete the group
+        match GroupRepository::delete(db, group_id).await {
+            Ok(_) => {
+                Ok(ApiResponse {
+                    success: true,
+                    message: "Group deleted successfully".to_string(),
+                    data: Some(()),
+                })
+            }
+            Err(e) => Err(format!("Failed to delete group: {}", e)),
         }
     }
 }
