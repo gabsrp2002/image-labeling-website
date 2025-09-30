@@ -13,7 +13,6 @@ export interface User {
 
 export interface LoginResult {
   success: boolean;
-  error?: string;
   errorType?: 'credentials' | 'server' | 'network';
 }
 
@@ -86,12 +85,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         return {
           success: false,
-          error: response.error || 'Login failed',
           errorType,
         };
       }
 
-      const data = response.data as { user_id?: string; access_token: string };
+      const data = response.data as { user_id?: string; token: string };
       
       // Store token and user data
       const userData: User = {
@@ -100,11 +98,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         role,
       };
       
-      setToken(data.access_token);
+      setToken(data.token);
       setUser(userData);
       
       // Persist to localStorage
-      localStorage.setItem('auth_token', data.access_token);
+      localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify(userData));
       
       return { success: true };
@@ -112,7 +110,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Login error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Network error occurred',
         errorType: 'network',
       };
     } finally {
