@@ -70,7 +70,7 @@ impl AuthService {
 
         let expiration = Utc::now()
             .checked_add_signed(Duration::hours(24))
-            .expect("Valid timestamp")
+            .ok_or("Invalid timestamp for JWT expiration".to_string())?
             .timestamp() as usize;
 
         let claims = Claims {
@@ -84,6 +84,6 @@ impl AuthService {
             &claims,
             &EncodingKey::from_secret(jwt_secret.as_ref()),
         )
-        .map_err(|_| "Token generation failed".to_string())
+        .map_err(|e| format!("Token generation failed: {}", e))
     }
 }
