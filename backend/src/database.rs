@@ -84,6 +84,18 @@ pub async fn create_tables(db: &DatabaseConnection) -> Result<(), DbErr> {
         )
     "#;
     
+    let create_final_tags_table = r#"
+        CREATE TABLE IF NOT EXISTS final_tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            image_id INTEGER NOT NULL,
+            tag_id INTEGER NOT NULL,
+            is_admin_override BOOLEAN NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL,
+            FOREIGN KEY (image_id) REFERENCES image(id),
+            FOREIGN KEY (tag_id) REFERENCES tag(id)
+        )
+    "#;
+    
     // Execute table creation statements
     db.execute_unprepared(create_admin_table).await?;
     db.execute_unprepared(create_labeler_table).await?;
@@ -92,6 +104,7 @@ pub async fn create_tables(db: &DatabaseConnection) -> Result<(), DbErr> {
     db.execute_unprepared(create_tag_table).await?;
     db.execute_unprepared(create_image_tags_table).await?;
     db.execute_unprepared(create_labeler_groups_table).await?;
+    db.execute_unprepared(create_final_tags_table).await?;
     
     Ok(())
 }

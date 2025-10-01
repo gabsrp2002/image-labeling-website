@@ -429,8 +429,11 @@ export default function GroupDetailPage() {
                 ) : (
                   <div className="space-y-3">
                     {images.map((image) => (
-                      <div key={image.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex-1 min-w-0">
+                      <div key={image.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => router.push(`/admin/groups/${groupId}/image/${image.id}`)}
+                        >
                           <div className="flex items-center space-x-3">
                             <div className="flex-shrink-0">
                               <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
