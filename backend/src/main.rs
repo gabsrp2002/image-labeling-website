@@ -13,6 +13,7 @@ use image_labeling_website::routes::admin::tag::{
 use image_labeling_website::routes::admin::final_tags::{
     get_final_tags, update_final_tags, auto_generate_final_tags
 };
+use image_labeling_website::routes::admin::export::bulk_export;
 use image_labeling_website::repository::AdminRepository;
 use image_labeling_website::middleware::auth::AdminAuthMiddleware;
 use dotenv::dotenv;
@@ -80,6 +81,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .route("/image/{image_id}/final-tags", web::get().to(get_final_tags))
                             .route("/image/{image_id}/final-tags", web::put().to(update_final_tags))
                             .route("/image/{image_id}/final-tags/auto-generate", web::post().to(auto_generate_final_tags))
+                            .route("/export/bulk", web::get().to(bulk_export))
                             .service(
                                 web::scope("/tag")
                                     .route("", web::post().to(create_tag))
