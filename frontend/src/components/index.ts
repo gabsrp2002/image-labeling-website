@@ -14,3 +14,4 @@ export { default as Navbar } from './Navbar';
 export { default as ProtectedRoute } from './ProtectedRoute';
 export { ImageUploader } from './ImageUploader';
 export { TagModal } from './TagModal';
+export { default as LabelerSelectionModal } from './LabelerSelectionModal';

@@ -148,4 +148,32 @@ impl ImageTagsRepository {
             .all(db)
             .await
     }
+
+    pub async fn delete_by_labeler_and_group(
+        db: &DatabaseConnection,
+        labeler_id: i32,
+        group_id: i32,
+    ) -> Result<(), DbErr> {
+        use crate::entity::image::Entity as Image;
+        
+        // First get all images in the group
+        let images = Image::find()
+            .filter(crate::entity::image::Column::GroupId.eq(group_id))
+            .all(db)
+            .await?;
+        
+        // Extract image IDs
+        let image_ids: Vec<i32> = images.into_iter().map(|img| img.id).collect();
+        
+        if !image_ids.is_empty() {
+            // Delete all image tags for this labeler from images in this group
+            ImageTags::delete_many()
+                .filter(crate::entity::image_tags::Column::LabelerId.eq(labeler_id))
+                .filter(crate::entity::image_tags::Column::ImageId.is_in(image_ids))
+                .exec(db)
+                .await?;
+        }
+        
+        Ok(())
+    }
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useApiClient, ApiClient } from '@/utils/api';
-import { LoadingSpinner, PageHeader, BackButton, Card, Tabs, Button, EmptyState, ImageUploader, TagModal } from '@/components';
+import { LoadingSpinner, PageHeader, BackButton, Card, Tabs, Button, EmptyState, ImageUploader, TagModal, LabelerSelectionModal } from '@/components';
 
 interface Group {
   id: number;
@@ -64,6 +64,12 @@ export default function GroupDetailPage() {
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [tagError, setTagError] = useState<string | null>(null);
   const [tagSuccess, setTagSuccess] = useState<string | null>(null);
+
+  // Labeler management state
+  const [isLabelerModalOpen, setIsLabelerModalOpen] = useState(false);
+  const [isAddingLabeler, setIsAddingLabeler] = useState(false);
+  const [labelerError, setLabelerError] = useState<string | null>(null);
+  const [labelerSuccess, setLabelerSuccess] = useState<string | null>(null);
 
   // Update ref when apiClient changes
   useEffect(() => {
@@ -207,6 +213,52 @@ export default function GroupDetailPage() {
     }
   }, [loadGroupDetails]);
 
+  // Labeler management functions
+  const handleAddLabeler = useCallback(async (labelerId: number) => {
+    setIsAddingLabeler(true);
+    setLabelerError(null);
+    setLabelerSuccess(null);
+
+    try {
+      const response = await apiClientRef.current.addLabelerToGroup(groupId, labelerId);
+
+      if (response.success) {
+        setLabelerSuccess('Labeler added to group successfully!');
+        setIsLabelerModalOpen(false);
+        // Reload group details to show new labeler
+        loadGroupDetails();
+      } else {
+        setLabelerError(response.error || 'Failed to add labeler to group');
+      }
+    } catch (error) {
+      console.error('Error adding labeler to group:', error);
+      setLabelerError('Failed to add labeler to group. Please try again.');
+    } finally {
+      setIsAddingLabeler(false);
+    }
+  }, [groupId, loadGroupDetails]);
+
+  const handleRemoveLabeler = useCallback(async (labelerId: number) => {
+    if (!confirm('Are you sure you want to remove this labeler from the group?')) {
+      return;
+    }
+
+    try {
+      const response = await apiClientRef.current.removeLabelerFromGroup(groupId, labelerId);
+
+      if (response.success) {
+        setLabelerSuccess('Labeler removed from group successfully!');
+        // Reload group details to remove labeler
+        loadGroupDetails();
+      } else {
+        setLabelerError(response.error || 'Failed to remove labeler from group');
+      }
+    } catch (error) {
+      console.error('Error removing labeler from group:', error);
+      setLabelerError('Failed to remove labeler from group. Please try again.');
+    }
+  }, [groupId, loadGroupDetails]);
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -247,13 +299,53 @@ export default function GroupDetailPage() {
               <div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 space-y-3 sm:space-y-0">
                   <h3 className="text-lg font-medium text-gray-900">Group Labelers</h3>
-                  <Button fullWidth={false} className="w-full sm:w-auto">
+                  <Button 
+                    onClick={() => setIsLabelerModalOpen(true)}
+                    fullWidth={false} 
+                    className="w-full sm:w-auto"
+                  >
                     <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                     Add Labeler
                   </Button>
                 </div>
+
+                {/* Labeler Messages */}
+                {labelerError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-red-600">{labelerError}</p>
+                      <button
+                        onClick={() => setLabelerError(null)}
+                        className="ml-3 text-red-400 hover:text-red-600 transition-colors"
+                        aria-label="Dismiss error message"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {labelerSuccess && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-green-600">{labelerSuccess}</p>
+                      <button
+                        onClick={() => setLabelerSuccess(null)}
+                        className="ml-3 text-green-400 hover:text-green-600 transition-colors"
+                        aria-label="Dismiss success message"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {labelers.length === 0 ? (
                   <EmptyState
                     title="No labelers assigned"
@@ -264,7 +356,10 @@ export default function GroupDetailPage() {
                     {labelers.map((labeler) => (
                       <div key={labeler.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <span className="text-sm font-medium text-gray-900">{labeler.username}</span>
-                        <button className="text-red-600 hover:text-red-900 text-sm">
+                        <button 
+                          onClick={() => handleRemoveLabeler(labeler.id)}
+                          className="text-red-600 hover:text-red-900 text-sm"
+                        >
                           Remove
                         </button>
                       </div>
@@ -471,6 +566,16 @@ export default function GroupDetailPage() {
           onSubmit={handleCreateTag}
           isLoading={isCreatingTag}
           title="Add New Tag"
+        />
+
+        {/* Labeler Selection Modal */}
+        <LabelerSelectionModal
+          isOpen={isLabelerModalOpen}
+          onClose={() => setIsLabelerModalOpen(false)}
+          onSelect={handleAddLabeler}
+          isLoading={isAddingLabeler}
+          title="Add Labeler to Group"
+          excludeLabelerIds={labelers.map(l => l.id)}
         />
       </div>
     </div>

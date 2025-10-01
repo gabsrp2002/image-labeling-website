@@ -1,6 +1,6 @@
 use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, ColumnTrait, QueryFilter};
 use bcrypt::hash;
-use crate::repository::{LabelerRepository, GroupRepository, ImageRepository, TagRepository};
+use crate::repository::{LabelerRepository, GroupRepository, ImageRepository, TagRepository, ImageTagsRepository};
 use crate::schemas::admin::{
     CreateLabelerRequest, UpdateLabelerRequest, LabelerResponse, 
     LabelerListResponse, GroupResponse, GroupListResponse, ApiResponse,
@@ -639,6 +639,130 @@ impl AdminService {
                 })
             }
             Err(e) => Err(format!("Failed to delete tag: {}", e)),
+        }
+    }
+
+    pub async fn add_labeler_to_group(
+        db: &DatabaseConnection,
+        group_id: i32,
+        request: crate::schemas::admin::AddLabelerToGroupRequest,
+    ) -> Result<ApiResponse<()>, String> {
+        let labeler_id = request.labeler_id;
+
+        // Check if group exists
+        match GroupRepository::find_by_id(db, group_id).await {
+            Ok(Some(_)) => {} // Group exists, continue
+            Ok(None) => {
+                return Ok(ApiResponse {
+                    success: false,
+                    message: "Group not found".to_string(),
+                    data: None,
+                });
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        }
+
+        // Check if labeler exists
+        match LabelerRepository::find_by_id(db, labeler_id).await {
+            Ok(Some(_)) => {} // Labeler exists, continue
+            Ok(None) => {
+                return Ok(ApiResponse {
+                    success: false,
+                    message: "Labeler not found".to_string(),
+                    data: None,
+                });
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        }
+
+        // Check if labeler is already in the group
+        match LabelerRepository::get_groups(db, labeler_id).await {
+            Ok(groups) => {
+                if groups.iter().any(|g| g.id == group_id) {
+                    return Ok(ApiResponse {
+                        success: false,
+                        message: "Labeler is already in this group".to_string(),
+                        data: None,
+                    });
+                }
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        }
+
+        // Add labeler to group
+        match LabelerRepository::add_to_group(db, labeler_id, group_id).await {
+            Ok(_) => {
+                Ok(ApiResponse {
+                    success: true,
+                    message: "Labeler added to group successfully".to_string(),
+                    data: Some(()),
+                })
+            }
+            Err(e) => Err(format!("Failed to add labeler to group: {}", e)),
+        }
+    }
+
+    pub async fn remove_labeler_from_group(
+        db: &DatabaseConnection,
+        group_id: i32,
+        labeler_id: i32,
+    ) -> Result<ApiResponse<()>, String> {
+        // Check if group exists
+        match GroupRepository::find_by_id(db, group_id).await {
+            Ok(Some(_)) => {} // Group exists, continue
+            Ok(None) => {
+                return Ok(ApiResponse {
+                    success: false,
+                    message: "Group not found".to_string(),
+                    data: None,
+                });
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        }
+
+        // Check if labeler exists
+        match LabelerRepository::find_by_id(db, labeler_id).await {
+            Ok(Some(_)) => {} // Labeler exists, continue
+            Ok(None) => {
+                return Ok(ApiResponse {
+                    success: false,
+                    message: "Labeler not found".to_string(),
+                    data: None,
+                });
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        }
+
+        // Check if labeler is in the group
+        match LabelerRepository::get_groups(db, labeler_id).await {
+            Ok(groups) => {
+                if !groups.iter().any(|g| g.id == group_id) {
+                    return Ok(ApiResponse {
+                        success: false,
+                        message: "Labeler is not in this group".to_string(),
+                        data: None,
+                    });
+                }
+            }
+            Err(e) => return Err(format!("Database error: {}", e)),
+        }
+
+        // Remove labeler from group
+        match LabelerRepository::remove_from_group(db, labeler_id, group_id).await {
+            Ok(_) => {
+                // Also remove all image tags for this labeler from images in this group
+                if let Err(e) = ImageTagsRepository::delete_by_labeler_and_group(db, labeler_id, group_id).await {
+                    eprintln!("Warning: Failed to remove image tags for labeler {} from group {}: {}", labeler_id, group_id, e);
+                    // Continue with the response even if tag removal fails
+                }
+                
+                Ok(ApiResponse {
+                    success: true,
+                    message: "Labeler removed from group successfully".to_string(),
+                    data: Some(()),
+                })
+            }
+            Err(e) => Err(format!("Failed to remove labeler from group: {}", e)),
         }
     }
 }

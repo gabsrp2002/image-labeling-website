@@ -5,7 +5,7 @@ use image_labeling_website::routes::auth::login;
 use image_labeling_website::routes::admin::labeler::{
     create_labeler, get_labeler, list_labelers, update_labeler, delete_labeler
 };
-use image_labeling_website::routes::admin::groups::{list_groups, create_group, get_group_details, delete_group};
+use image_labeling_website::routes::admin::groups::{list_groups, create_group, get_group_details, delete_group, add_labeler_to_group, remove_labeler_from_group};
 use image_labeling_website::routes::admin::image::{upload_image, get_image_details};
 use image_labeling_website::routes::admin::tag::{
     create_tag, get_tag, list_tags_by_group, update_tag, delete_tag
@@ -78,6 +78,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .route("/groups", web::post().to(create_group))
                             .route("/groups/{id}", web::get().to(get_group_details))
                             .route("/groups/{id}", web::delete().to(delete_group))
+                            .route("/groups/{id}/labelers", web::post().to(add_labeler_to_group))
+                            .route("/groups/{group_id}/labelers/{labeler_id}", web::delete().to(remove_labeler_from_group))
                             .route("/groups/{group_id}/image/{image_id}", web::get().to(get_image_details))
                             .route("/image", web::post().to(upload_image))
                             .route("/image/{image_id}/final-tags", web::get().to(get_final_tags))

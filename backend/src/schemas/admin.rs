@@ -104,6 +104,16 @@ pub struct ImageUploadResponse {
     pub uploaded_at: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct AddLabelerToGroupRequest {
+    pub labeler_id: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct RemoveLabelerFromGroupRequest {
+    pub labeler_id: i32,
+}
+
 #[derive(Debug, Serialize)]
 pub struct ApiResponse<T> {
     pub success: bool,

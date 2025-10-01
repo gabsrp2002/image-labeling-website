@@ -211,6 +211,25 @@ export class ApiClient {
     });
   }
 
+  // Group labeler management
+  async addLabelerToGroup(groupId: number, labelerId: number): Promise<ApiResponse<{
+    success: boolean;
+    message: string;
+    data: null;
+  }>> {
+    return this.post(`/admin/groups/${groupId}/labelers`, {
+      labeler_id: labelerId
+    });
+  }
+
+  async removeLabelerFromGroup(groupId: number, labelerId: number): Promise<ApiResponse<{
+    success: boolean;
+    message: string;
+    data: null;
+  }>> {
+    return this.delete(`/admin/groups/${groupId}/labelers/${labelerId}`);
+  }
+
   // Helper method to convert file to base64
   static async fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {

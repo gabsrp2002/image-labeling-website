@@ -85,7 +85,7 @@ export default function ImageDetailPage() {
           try {
             const autoGenResponse = await apiClientRef.current.post(`/admin/image/${imageId}/final-tags/auto-generate`);
             if (autoGenResponse.success && autoGenResponse.data) {
-              setFinalTags((autoGenResponse.data as any).data || []);
+              setFinalTags((autoGenResponse.data as { data: FinalTagData[] }).data || []);
               setHasAdminOverride(false);
             }
           } catch (error) {
@@ -120,7 +120,7 @@ export default function ImageDetailPage() {
       const response = await apiClientRef.current.put(`/admin/image/${imageId}/final-tags`, request);
       
       if (response.success && response.data) {
-        setFinalTags((response.data as any).data || []);
+        setFinalTags((response.data as { data: FinalTagData[] }).data || []);
         setHasAdminOverride(true);
         setUpdateSuccess('Final tags updated successfully!');
       } else {
