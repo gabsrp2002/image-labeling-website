@@ -30,8 +30,8 @@ export default function AdminDashboardPage() {
   const [exportError, setExportError] = useState<string | null>(null);
   
   // State for dashboard data
-  const [labelerCount, setLabelerCount] = useState<number>(0);
-  const [groupCount, setGroupCount] = useState<number>(0);
+  const [labelerCount, setLabelerCount] = useState<number | null>(null);
+  const [groupCount, setGroupCount] = useState<number | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [statsError, setStatsError] = useState<string | null>(null);
 
@@ -47,22 +47,32 @@ export default function AdminDashboardPage() {
         apiClient.get<ApiResponse<GroupListResponse>>('/admin/groups')
       ]);
       
+      let hasError = false;
+      
       if (labelersResponse.success && labelersResponse.data?.success && labelersResponse.data.data) {
         setLabelerCount(labelersResponse.data.data.total);
       } else {
         console.error('Failed to load labelers:', labelersResponse.error);
-        setStatsError('Failed to load labeler count');
+        setLabelerCount(0); // Set to 0 on error instead of leaving as null
+        hasError = true;
       }
 
       if (groupsResponse.success && groupsResponse.data?.success && groupsResponse.data.data) {
         setGroupCount(groupsResponse.data.data.total);
       } else {
         console.error('Failed to load groups:', groupsResponse.error);
-        setStatsError('Failed to load group count');
+        setGroupCount(0); // Set to 0 on error instead of leaving as null
+        hasError = true;
+      }
+      
+      if (hasError) {
+        setStatsError('Failed to load some dashboard statistics');
       }
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
       setStatsError('Failed to load dashboard statistics');
+      setLabelerCount(0); // Set to 0 on error instead of leaving as null
+      setGroupCount(0); // Set to 0 on error instead of leaving as null
     } finally {
       setIsLoadingStats(false);
     }
@@ -247,7 +257,7 @@ export default function AdminDashboardPage() {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Labelers</dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {isLoadingStats ? (
+                        {labelerCount === null ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-8 rounded"></div>
                         ) : (
                           labelerCount
@@ -271,7 +281,7 @@ export default function AdminDashboardPage() {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Groups</dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {isLoadingStats ? (
+                        {groupCount === null ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-8 rounded"></div>
                         ) : (
                           groupCount
