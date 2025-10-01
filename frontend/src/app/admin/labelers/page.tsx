@@ -264,7 +264,13 @@ export default function AdminLabelersPage() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleDeleteLabeler(labeler.id)}
-                        className="text-red-600 hover:text-red-900 text-sm font-medium"
+                        disabled={labeler.group_ids.length > 0}
+                        className={`text-sm font-medium ${
+                          labeler.group_ids.length > 0 
+                            ? 'text-gray-400 cursor-not-allowed' 
+                            : 'text-red-600 hover:text-red-900'
+                        }`}
+                        title={labeler.group_ids.length > 0 ? 'Cannot delete labeler who is assigned to groups' : 'Delete labeler'}
                       >
                         Delete
                       </button>
@@ -329,7 +335,13 @@ export default function AdminLabelersPage() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleDeleteLabeler(labeler.id)}
-                          className="text-red-600 hover:text-red-900"
+                          disabled={labeler.group_ids.length > 0}
+                          className={`${
+                            labeler.group_ids.length > 0 
+                              ? 'text-gray-400 cursor-not-allowed' 
+                              : 'text-red-600 hover:text-red-900'
+                          }`}
+                          title={labeler.group_ids.length > 0 ? 'Cannot delete labeler who is assigned to groups' : 'Delete labeler'}
                         >
                           Delete
                         </button>
