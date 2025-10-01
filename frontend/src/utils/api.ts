@@ -199,14 +199,16 @@ export class ApiClient {
     });
   }
 
-  async suggestTags(imageId: number): Promise<ApiResponse<{
+  async suggestTags(imageId: number, ignoredTagIds: number[]): Promise<ApiResponse<{
     success: boolean;
     message: string;
     data: {
       suggested_tags: string[];
     };
   }>> {
-    return this.post(`/labeler/images/${imageId}/suggest_tags`);
+    return this.post(`/labeler/images/${imageId}/suggest_tags`, {
+      ignored_tag_ids: ignoredTagIds
+    });
   }
 
   // Helper method to convert file to base64

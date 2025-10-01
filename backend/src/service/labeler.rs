@@ -241,6 +241,7 @@ impl LabelerService {
         db: &DatabaseConnection,
         labeler_id: i32,
         image_id: i32,
+        request: crate::schemas::labeler::SuggestTagsRequest,
     ) -> Result<ApiResponse<SuggestTagsResponse>, String> {
         // Get the image
         let image = match crate::repository::ImageRepository::find_by_id(db, image_id).await {
@@ -265,21 +266,17 @@ impl LabelerService {
             }
         }
 
-        // Get current tags for this image by this labeler
-        let current_tags = match ImageTagsRepository::get_by_image_and_labeler(db, image_id, labeler_id).await {
-            Ok(image_tags) => {
-                let mut tag_names = Vec::new();
-                for image_tag in image_tags {
-                    if let Ok(Some(tag)) = crate::repository::TagRepository::find_by_id(db, image_tag.tag_id).await {
-                        tag_names.push(tag.name);
-                    }
+        // Get ignored tag names from the request
+        let ignored_tags = if !request.ignored_tag_ids.is_empty() {
+            let mut tag_names = Vec::new();
+            for tag_id in &request.ignored_tag_ids {
+                if let Ok(Some(tag)) = crate::repository::TagRepository::find_by_id(db, *tag_id).await {
+                    tag_names.push(tag.name);
                 }
-                tag_names
             }
-            Err(e) => {
-                eprintln!("Error fetching current tags: {}", e);
-                Vec::new()
-            }
+            tag_names
+        } else {
+            Vec::new()
         };
 
         // Get group tags
@@ -292,7 +289,7 @@ impl LabelerService {
         };
 
         // Call OpenAI API for suggestions
-        match call_openai_for_suggestions(&image.base64_data, &image.filetype, &group_tags, &current_tags).await {
+        match call_openai_for_suggestions(&image.base64_data, &image.filetype, &group_tags, &ignored_tags).await {
             Ok(suggested_tags) => {
                 Ok(ApiResponse {
                     success: true,
@@ -314,14 +311,14 @@ async fn call_openai_for_suggestions(
     _base64_data: &str,
     _filetype: &str,
     group_tags: &[String],
-    current_tags: &[String],
+    ignored_tags: &[String],
 ) -> Result<Vec<String>, String> {
     // This is a placeholder implementation
     // In a real implementation, you would call the OpenAI API here
     // For now, we'll return some mock suggestions based on the group tags
     
     let available_tags: Vec<String> = group_tags.iter()
-        .filter(|tag| !current_tags.contains(tag))
+        .filter(|tag| !ignored_tags.contains(tag))
         .cloned()
         .collect();
     

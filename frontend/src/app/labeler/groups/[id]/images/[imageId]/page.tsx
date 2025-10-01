@@ -32,6 +32,7 @@ export default function ImageLabelingPage() {
   const [imageDetails, setImageDetails] = useState<ImageDetails | null>(null);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+  const [hasTriedSuggesting, setHasTriedSuggesting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -68,7 +69,8 @@ export default function ImageLabelingPage() {
   const handleSuggestTags = async () => {
     try {
       setIsSuggesting(true);
-      const response = await apiClientRef.current.suggestTags(imageId);
+      setHasTriedSuggesting(true);
+      const response = await apiClientRef.current.suggestTags(imageId, selectedTags);
       
       if (response.success && response.data && response.data.data && response.data.data.suggested_tags) {
         setSuggestedTags(response.data.data.suggested_tags);
@@ -221,11 +223,11 @@ export default function ImageLabelingPage() {
                 </div>
 
                 {/* Suggested Tags */}
-                {suggestedTags && suggestedTags.length > 0 && (
+                {suggestedTags && suggestedTags.length > 0 ? (
                   <div className="mb-6">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">AI Suggestions</h3>
                     <div className="flex flex-wrap gap-2">
-                      {(suggestedTags || []).map((suggestion, index) => (
+                      {suggestedTags.map((suggestion, index) => (
                         <span
                           key={index}
                           className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
@@ -235,7 +237,13 @@ export default function ImageLabelingPage() {
                       ))}
                     </div>
                   </div>
-                )}
+                ) : hasTriedSuggesting && suggestedTags && suggestedTags.length === 0 ? (
+                  <div className="mb-6">
+                    <div className="text-center py-4 text-gray-500 text-sm">
+                      No new tag suggestions available. All available tags may already be selected.
+                    </div>
+                  </div>
+                ) : null}
 
                 {/* Available Tags */}
                 <div className="space-y-3">

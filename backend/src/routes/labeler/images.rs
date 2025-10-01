@@ -80,6 +80,7 @@ pub async fn suggest_tags(
     req: HttpRequest,
     path: web::Path<i32>,
     db: web::Data<DatabaseConnection>,
+    suggest_request: web::Json<crate::schemas::labeler::SuggestTagsRequest>,
 ) -> Result<HttpResponse, actix_web::Error> {
     // Extract user info from request extensions (set by middleware)
     let claims = req.extensions().get::<Claims>()
@@ -89,7 +90,7 @@ pub async fn suggest_tags(
     let labeler_id = claims.user_id;
     let image_id = path.into_inner();
     
-    match LabelerService::suggest_tags(&db, labeler_id, image_id).await {
+    match LabelerService::suggest_tags(&db, labeler_id, image_id, suggest_request.into_inner()).await {
         Ok(response) => {
             Ok(HttpResponse::Ok().json(response))
         }

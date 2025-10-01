@@ -52,6 +52,11 @@ pub struct UpdateImageTagsRequest {
     pub tag_ids: Vec<i32>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct SuggestTagsRequest {
+    pub ignored_tag_ids: Vec<i32>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct SuggestTagsResponse {
     pub suggested_tags: Vec<String>,
