@@ -1,4 +1,25 @@
+'use client';
+
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+
 export default function Home() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  const handleGetStarted = () => {
+    if (!user) {
+      // User not logged in, redirect to login
+      router.push('/login');
+    } else if (user.role === 'admin') {
+      // User is admin, redirect to admin dashboard
+      router.push('/admin/dashboard');
+    } else if (user.role === 'labeler') {
+      // User is labeler, redirect to labeler groups
+      router.push('/labeler/groups');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -11,20 +32,19 @@ export default function Home() {
           </p>
           <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
             <div className="rounded-md shadow">
-              <button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10 transition-colors duration-200">
-                Get Started
-              </button>
-            </div>
-            <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
-              <button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10 transition-colors duration-200">
-                Learn More
+              <button 
+                onClick={handleGetStarted}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed md:py-4 md:text-lg md:px-10 transition-colors duration-200"
+              >
+                {isLoading ? 'Loading...' : 'Get Started'}
               </button>
             </div>
           </div>
         </div>
 
         <div className="mt-20">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
             <div className="pt-6">
               <div className="flow-root bg-white rounded-lg px-6 pb-8">
                 <div className="-mt-6">
@@ -56,24 +76,6 @@ export default function Home() {
                   <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">Labeler Interface</h3>
                   <p className="mt-5 text-base text-gray-500">
                     Intuitive labeling tools designed for efficiency and accuracy. Complete tasks quickly with our user-friendly interface.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-6">
-              <div className="flow-root bg-white rounded-lg px-6 pb-8">
-                <div className="-mt-6">
-                  <div>
-                    <span className="inline-flex items-center justify-center p-3 bg-purple-500 rounded-md shadow-lg">
-                      <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </span>
-                  </div>
-                  <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">Analytics & Reports</h3>
-                  <p className="mt-5 text-base text-gray-500">
-                    Track labeling progress, quality metrics, and team performance with detailed analytics and reporting tools.
                   </p>
                 </div>
               </div>
