@@ -16,6 +16,7 @@ fastrand = "2.0"
 jsonwebtoken = "9.3"
 bcrypt = "0.15"
 dotenv = "0.15"
+openai_api_rust = "0.1"
 
 [dev-dependencies]
 jsonwebtoken = "9.3"

@@ -2,3 +2,4 @@ pub mod auth;
 pub mod admin;
 pub mod export;
 pub mod labeler;
+pub mod openai;

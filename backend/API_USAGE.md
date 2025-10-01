@@ -41,11 +41,15 @@ curl -X POST http://127.0.0.1:8080/api/v1/login \
 
 # Running the Server
 
-1. Edit the `.env` file and set your JWT secret:
+1. Create a `.env` file in the backend directory and set your configuration:
 ```bash
 # Generate a secure JWT secret
 openssl rand -base64 32
 # Add the generated secret to your .env file
+
+# Optional: OpenAI API key for AI-powered tag suggestions using GPT-4 Vision
+# If not set, the system will use mock suggestions
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 2. Start the server:
