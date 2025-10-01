@@ -24,5 +24,17 @@ pub struct ImageData {
     pub filename: String,
     pub filetype: String,
     pub base64: String,
+    pub uploaded_at: String,
     pub final_tags: Vec<String>,
+    pub tag_statistics: Vec<TagStatistic>,
+    pub has_admin_override: bool,
+}
+
+#[derive(Serialize)]
+pub struct TagStatistic {
+    pub tag_id: i32,
+    pub tag_name: String,
+    pub percentage: f64,
+    pub count: i32,
+    pub total_labelers: i32,
 }

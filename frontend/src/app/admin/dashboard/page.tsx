@@ -24,6 +24,27 @@ interface GroupListResponse {
   total: number;
 }
 
+interface TagStatistic {
+  tag_id: number;
+  tag_name: string;
+  percentage: number;
+  count: number;
+  total_labelers: number;
+}
+
+interface ImageData {
+  filename: string;
+  filetype: string;
+  base64: string;
+  uploaded_at: string;
+  final_tags: string[];
+  tag_statistics: TagStatistic[];
+  has_admin_override: boolean;
+}
+
+
+
+
 export default function AdminDashboardPage() {
   const apiClient = useApiClient();
   const [isExporting, setIsExporting] = useState(false);
@@ -32,13 +53,11 @@ export default function AdminDashboardPage() {
   // State for dashboard data
   const [labelerCount, setLabelerCount] = useState<number | null>(null);
   const [groupCount, setGroupCount] = useState<number | null>(null);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [statsError, setStatsError] = useState<string | null>(null);
 
   // Load dashboard statistics
   const loadDashboardStats = useCallback(async () => {
     try {
-      setIsLoadingStats(true);
       setStatsError(null);
       
       // Load labelers and groups in parallel
@@ -74,7 +93,7 @@ export default function AdminDashboardPage() {
       setLabelerCount(0); // Set to 0 on error instead of leaving as null
       setGroupCount(0); // Set to 0 on error instead of leaving as null
     } finally {
-      setIsLoadingStats(false);
+      // Loading completed
     }
   }, [apiClient]);
 
@@ -91,7 +110,7 @@ export default function AdminDashboardPage() {
       const response = await apiClient.get('/admin/export/bulk');
       
       if (response.success && response.data) {
-        // Create and download the JSON file
+        // Create and download the JSON file with statistics included
         const dataStr = JSON.stringify(response.data, null, 2);
         const dataBlob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(dataBlob);
@@ -140,7 +159,7 @@ export default function AdminDashboardPage() {
                   <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  Bulk Export
+                  Export Data with Statistics
                 </>
               )}
             </Button>
