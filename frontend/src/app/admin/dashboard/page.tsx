@@ -1,14 +1,77 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { PageHeader, Card, Button } from '@/components';
-import { useApiClient } from '@/utils/api';
+import { useApiClient, ApiResponse } from '@/utils/api';
+
+// Types for API responses
+interface LabelerListResponse {
+  labelers: Array<{
+    id: number;
+    username: string;
+    group_ids: number[];
+  }>;
+  total: number;
+}
+
+interface GroupListResponse {
+  groups: Array<{
+    id: number;
+    name: string;
+    description: string | null;
+  }>;
+  total: number;
+}
 
 export default function AdminDashboardPage() {
   const apiClient = useApiClient();
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  
+  // State for dashboard data
+  const [labelerCount, setLabelerCount] = useState<number>(0);
+  const [groupCount, setGroupCount] = useState<number>(0);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
+
+  // Load dashboard statistics
+  const loadDashboardStats = useCallback(async () => {
+    try {
+      setIsLoadingStats(true);
+      setStatsError(null);
+      
+      // Load labelers and groups in parallel
+      const [labelersResponse, groupsResponse] = await Promise.all([
+        apiClient.get<ApiResponse<LabelerListResponse>>('/admin/labeler'),
+        apiClient.get<ApiResponse<GroupListResponse>>('/admin/groups')
+      ]);
+      
+      if (labelersResponse.success && labelersResponse.data?.success && labelersResponse.data.data) {
+        setLabelerCount(labelersResponse.data.data.total);
+      } else {
+        console.error('Failed to load labelers:', labelersResponse.error);
+        setStatsError('Failed to load labeler count');
+      }
+
+      if (groupsResponse.success && groupsResponse.data?.success && groupsResponse.data.data) {
+        setGroupCount(groupsResponse.data.data.total);
+      } else {
+        console.error('Failed to load groups:', groupsResponse.error);
+        setStatsError('Failed to load group count');
+      }
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+      setStatsError('Failed to load dashboard statistics');
+    } finally {
+      setIsLoadingStats(false);
+    }
+  }, [apiClient]);
+
+  // Load stats on component mount
+  useEffect(() => {
+    loadDashboardStats();
+  }, [loadDashboardStats]);
 
   const handleBulkExport = useCallback(async () => {
     setIsExporting(true);
@@ -92,7 +155,8 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
           {/* Manage Labelers Card */}
           <Link href="/admin/labelers">
             <Card hover className="overflow-hidden">
@@ -145,35 +209,32 @@ export default function AdminDashboardPage() {
             </Card>
           </Link>
 
-          {/* Analytics Card */}
-          <Card>
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg className="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Analytics</dt>
-                    <dd className="text-lg font-medium text-gray-900">Coming Soon</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-5 py-3">
-              <div className="text-sm">
-                <span className="text-gray-600">Track progress and performance metrics</span>
-              </div>
-            </div>
-          </Card>
+          </div>
         </div>
 
         {/* Quick Stats */}
         <div className="mt-8">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Stats</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          
+          {statsError && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Stats Error</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>{statsError}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
                 <div className="flex items-center">
@@ -185,7 +246,13 @@ export default function AdminDashboardPage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Labelers</dt>
-                      <dd className="text-lg font-medium text-gray-900">12</dd>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {isLoadingStats ? (
+                          <div className="animate-pulse bg-gray-200 h-6 w-8 rounded"></div>
+                        ) : (
+                          labelerCount
+                        )}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -202,44 +269,14 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Active Groups</dt>
-                      <dd className="text-lg font-medium text-gray-900">4</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Total Tasks</dt>
-                      <dd className="text-lg font-medium text-gray-900">156</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Completed</dt>
-                      <dd className="text-lg font-medium text-gray-900">89</dd>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Total Groups</dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {isLoadingStats ? (
+                          <div className="animate-pulse bg-gray-200 h-6 w-8 rounded"></div>
+                        ) : (
+                          groupCount
+                        )}
+                      </dd>
                     </dl>
                   </div>
                 </div>
