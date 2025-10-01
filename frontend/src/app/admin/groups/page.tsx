@@ -9,7 +9,6 @@ interface Group {
   id: number;
   name: string;
   description: string | null;
-  labelerCount?: number;
 }
 
 interface GroupListResponse {
@@ -90,24 +89,6 @@ export default function AdminGroupsPage() {
     }
   };
 
-  const handleDeleteGroup = async (id: number) => {
-    if (confirm('Are you sure you want to delete this group? This action cannot be undone.')) {
-      try {
-        setError(null);
-        const response = await apiClientRef.current.delete(`/admin/groups/${id}`);
-        
-        if (response.success) {
-          // Refresh the groups list
-          loadGroups();
-        } else {
-          setError(response.error || 'Failed to delete group');
-        }
-      } catch (error) {
-        console.error('Error deleting group:', error);
-        setError('Failed to delete group');
-      }
-    }
-  };
 
   const handleGroupClick = (groupId: number) => {
     router.push(`/admin/groups/${groupId}`);
@@ -196,23 +177,11 @@ export default function AdminGroupsPage() {
                   className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => handleGroupClick(group.id)}
                 >
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="mb-2">
                     <h3 className="text-lg font-medium text-gray-900">{group.name}</h3>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteGroup(group.id);
-                      }}
-                      className="text-red-600 hover:text-red-900 text-sm font-medium"
-                    >
-                      Delete
-                    </button>
                   </div>
-                  <p className="text-sm text-gray-500 mb-2">
+                  <p className="text-sm text-gray-500">
                     {group.description || 'No description'}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {group.labelerCount || 0} labeler{(group.labelerCount || 0) !== 1 ? 's' : ''}
                   </p>
                 </div>
               ))}
@@ -229,28 +198,6 @@ export default function AdminGroupsPage() {
                     label: 'Description',
                     render: (value) => String(value || 'No description'),
                     className: 'text-gray-500'
-                  },
-                  { 
-                    key: 'labelerCount', 
-                    label: 'Labelers',
-                    render: (value) => `${value || 0} labeler${(value || 0) !== 1 ? 's' : ''}`,
-                    className: 'text-gray-500'
-                  },
-                  { 
-                    key: 'id', 
-                    label: 'Actions',
-                    render: (_, group) => (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteGroup(group.id);
-                        }}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    ),
-                    className: 'font-medium'
                   }
                 ]}
                 onRowClick={(group) => handleGroupClick(group.id)}
