@@ -58,8 +58,7 @@ impl OpenAIService {
             .collect();
 
         let prompt = format!(
-            "You are an AI assistant that suggests relevant tags for images. 
-            Based on the image provided, suggest all relevant tags from the available list.
+            "Based on the image provided, suggest all relevant tags from the available list.
             
             Available tags: {}
             
