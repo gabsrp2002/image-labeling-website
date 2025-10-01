@@ -171,7 +171,7 @@ export default function ImageDetailPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Image Display */}
-          <Card>
+          <Card maxHeight="500px">
             <div className="p-4 sm:p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Image</h3>
               <div className="flex justify-center h-96">
@@ -185,7 +185,7 @@ export default function ImageDetailPage() {
           </Card>
 
           {/* Tag Statistics Dashboard */}
-          <Card>
+          <Card maxHeight="500px">
             <div className="p-4 sm:p-6 h-full flex flex-col">
               <div className="mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Tag Statistics</h3>
