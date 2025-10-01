@@ -547,9 +547,6 @@ export default function GroupDetailPage() {
                             </div>
                           </div>
                         </div>
-                        <button className="text-red-600 hover:text-red-900 text-sm font-medium">
-                          Remove
-                        </button>
                       </div>
                     ))}
                   </div>
