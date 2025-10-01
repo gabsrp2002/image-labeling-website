@@ -154,6 +154,23 @@ export class ApiClient {
     return this.get(`/admin/tag/group/${groupId}`);
   }
 
+  // Labeler methods
+  async getLabelerGroups(): Promise<ApiResponse<Array<{
+    id: number;
+    name: string;
+    description: string | null;
+  }>>> {
+    return this.get('/labeler/groups');
+  }
+
+  async getGroupImages(groupId: number): Promise<ApiResponse<Array<{
+    id: number;
+    filename: string;
+    status: string;
+  }>>> {
+    return this.get(`/labeler/groups/${groupId}/images`);
+  }
+
   // Helper method to convert file to base64
   static async fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {

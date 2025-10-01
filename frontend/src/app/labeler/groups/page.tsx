@@ -1,102 +1,51 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { LoadingSpinner, PageHeader, Card, EmptyState } from '@/components';
+import { useApiClient } from '@/utils/api';
 
 interface Group {
-  id: string;
+  id: number;
   name: string;
-  description: string;
-  taskCount: number;
-  completedTasks: number;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed';
-  priority: 'low' | 'medium' | 'high';
-  dueDate?: string;
+  description: string | null;
 }
 
 export default function LabelerGroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const apiClient = useApiClient();
+  const apiClientRef = useRef(apiClient);
+  const router = useRouter();
 
-  // Load groups
+  // Update ref when apiClient changes
   useEffect(() => {
-    loadGroups();
-  }, []);
+    apiClientRef.current = apiClient;
+  }, [apiClient]);
 
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     try {
       setIsLoading(true);
-      // TODO: Replace with actual API call
-      // Mock data for now
-      setGroups([
-        { id: '1', name: 'Group A', description: 'Image classification tasks', taskCount: 15, completedTasks: 8 },
-        { id: '2', name: 'Group B', description: 'Object detection tasks', taskCount: 10, completedTasks: 3 },
-        { id: '3', name: 'Group C', description: 'Semantic segmentation tasks', taskCount: 5, completedTasks: 0 },
-      ]);
+      const response = await apiClientRef.current.getLabelerGroups();
+      if (response.success && response.data) {
+        setGroups(response.data);
+      } else {
+        console.error('Error loading groups:', response.error);
+      }
     } catch (error) {
       console.error('Error loading groups:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // Empty dependency array since we use ref
 
-  const loadTasks = async () => {
-    try {
-      // TODO: Replace with actual API call
-      // Mock data for now
-      const mockTasks: Task[] = [
-        {
-          id: '1',
-          title: 'Classify images of cats and dogs',
-          description: 'Label each image as either cat or dog',
-          status: 'pending',
-          priority: 'high',
-          dueDate: '2024-01-15'
-        },
-        {
-          id: '2',
-          title: 'Identify objects in street scenes',
-          description: 'Mark all visible objects in the provided street images',
-          status: 'in_progress',
-          priority: 'medium',
-          dueDate: '2024-01-20'
-        },
-        {
-          id: '3',
-          title: 'Segment medical images',
-          description: 'Identify and segment different organs in medical scans',
-          status: 'completed',
-          priority: 'low'
-        }
-      ];
-      setTasks(mockTasks);
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-    }
-  };
+  // Load groups
+  useEffect(() => {
+    loadGroups();
+  }, [loadGroups]);
 
   const handleGroupSelect = (group: Group) => {
-    setSelectedGroup(group);
-    loadTasks();
-  };
-
-  const handleTaskStatusChange = async (taskId: string, newStatus: Task['status']) => {
-    try {
-      // TODO: Implement actual API call
-      setTasks(tasks.map(task => 
-        task.id === taskId ? { ...task, status: newStatus } : task
-      ));
-    } catch (error) {
-      console.error('Error updating task status:', error);
-    }
+    router.push(`/labeler/groups/${group.id}`);
   };
 
 
@@ -106,125 +55,57 @@ export default function LabelerGroupsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <PageHeader 
           title="My Groups" 
           description="Select a group to view and work on labeling tasks." 
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Groups List */}
-          <div className="lg:col-span-1">
-            <Card>
-              <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Available Groups</h2>
-                <div className="space-y-3">
-                  {groups.map((group) => (
+        <div className="mt-8">
+          <Card>
+            <div className="px-4 py-5 sm:p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-6">Available Groups</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {groups.length === 0 ? (
+                  <div className="col-span-full text-center py-12">
+                    <EmptyState
+                      icon={
+                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                      }
+                      title="No groups assigned"
+                      description="You haven't been assigned to any groups yet."
+                    />
+                  </div>
+                ) : (
+                  groups.map((group) => (
                     <button
                       key={group.id}
                       onClick={() => handleGroupSelect(group)}
-                      className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
-                        selectedGroup?.id === group.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className="w-full text-left p-4 sm:p-6 rounded-lg border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group"
                     >
-                      <h3 className="font-medium text-gray-900">{group.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{group.description}</p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <span className="text-sm text-gray-500">
-                          {group.completedTasks}/{group.taskCount} tasks completed
-                        </span>
-                        <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${(group.completedTasks / group.taskCount) * 100}%` }}
-                          />
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-gray-900 text-sm sm:text-base group-hover:text-blue-900">
+                            {group.name}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-gray-600 mt-2 line-clamp-3">
+                            {group.description || 'No description available'}
+                          </p>
+                        </div>
+                        <div className="ml-4 flex-shrink-0">
+                          <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
                         </div>
                       </div>
                     </button>
-                  ))}
-                </div>
+                  ))
+                )}
               </div>
-            </Card>
-          </div>
-
-          {/* Tasks List */}
-          <div className="lg:col-span-2">
-            {selectedGroup ? (
-              <Card>
-                <div className="px-4 py-5 sm:p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-lg font-medium text-gray-900">{selectedGroup.name}</h2>
-                      <p className="text-sm text-gray-600">{selectedGroup.description}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-500">Progress</div>
-                      <div className="text-2xl font-bold text-blue-600">
-                        {selectedGroup.completedTasks}/{selectedGroup.taskCount}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {tasks.map((task) => (
-                      <div key={task.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-medium text-gray-900">{task.title}</h3>
-                            <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-                            <div className="mt-2 flex items-center space-x-4">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                task.priority === 'high' ? 'bg-red-100 text-red-800' :
-                                task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
-                              }`}>
-                                {task.priority} priority
-                              </span>
-                              {task.dueDate && (
-                                <span className="text-sm text-gray-500">
-                                  Due: {new Date(task.dueDate).toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="ml-4 flex items-center space-x-2">
-                            <select
-                              value={task.status}
-                              onChange={(e) => handleTaskStatusChange(task.id, e.target.value as Task['status'])}
-                              className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            >
-                              <option value="pending">Pending</option>
-                              <option value="in_progress">In Progress</option>
-                              <option value="completed">Completed</option>
-                            </select>
-                            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                              Start Task
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            ) : (
-              <Card>
-                <div className="px-4 py-5 sm:p-6">
-                  <EmptyState
-                    icon={
-                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                    }
-                    title="No group selected"
-                    description="Choose a group from the left to view tasks."
-                  />
-                </div>
-              </Card>
-            )}
-          </div>
+            </div>
+          </Card>
         </div>
       </div>
     </div>

@@ -14,8 +14,9 @@ use image_labeling_website::routes::admin::final_tags::{
     get_final_tags, update_final_tags, auto_generate_final_tags
 };
 use image_labeling_website::routes::admin::export::bulk_export;
+use image_labeling_website::routes::labeler::groups::{get_groups, get_group_images};
 use image_labeling_website::repository::AdminRepository;
-use image_labeling_website::middleware::auth::AdminAuthMiddleware;
+use image_labeling_website::middleware::auth::{AdminAuthMiddleware, LabelerAuthMiddleware};
 use dotenv::dotenv;
 use bcrypt::hash;
 
@@ -98,6 +99,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     .route("/{id}", web::put().to(update_labeler))
                                     .route("/{id}", web::delete().to(delete_labeler))
                             )
+                    )
+                    .service(
+                        web::scope("/labeler")
+                            .wrap(LabelerAuthMiddleware)
+                            .route("/groups", web::get().to(get_groups))
+                            .route("/groups/{group_id}/images", web::get().to(get_group_images))
                     )
             )
     })
