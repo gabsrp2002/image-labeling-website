@@ -183,7 +183,7 @@ export default function ImageLabelingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Image Display */}
           <div>
-            <Card>
+            <Card maxHeight="500px">
               <div className="px-4 py-5 sm:p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Image</h2>
                 <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
@@ -202,7 +202,7 @@ export default function ImageLabelingPage() {
 
           {/* Tag Selection */}
           <div>
-            <Card>
+            <Card maxHeight="500px">
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-medium text-gray-900">Select Tags</h2>
@@ -273,7 +273,8 @@ export default function ImageLabelingPage() {
 
                 {/* Selected Tags Summary */}
                 {selectedTags.length > 0 && (
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <Card maxHeight="200px" className="mt-6">
+                    <div className="p-4 bg-blue-50 rounded-lg">
                     <h4 className="text-sm font-medium text-blue-900 mb-2">
                       Selected Tags ({selectedTags.length})
                     </h4>
@@ -290,7 +291,8 @@ export default function ImageLabelingPage() {
                         ) : null;
                       })}
                     </div>
-                  </div>
+                    </div>
+                  </Card>
                 )}
 
                 {/* Action Buttons */}
