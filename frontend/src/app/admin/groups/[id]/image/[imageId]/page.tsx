@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useApiClient, ApiClient } from '@/utils/api';
-import { LoadingSpinner, PageHeader, BackButton, Card, Button, EmptyState, SuccessMessage, ErrorMessage } from '@/components';
+import { useApiClient } from '@/utils/api';
+import { LoadingSpinner, PageHeader, BackButton, Card, EmptyState, SuccessMessage, ErrorMessage } from '@/components';
 
 interface ImageData {
   id: number;
@@ -174,11 +174,11 @@ export default function ImageDetailPage() {
           <Card>
             <div className="p-4 sm:p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Image</h3>
-              <div className="flex justify-center">
+              <div className="flex justify-center h-96">
                 <img
                   src={`data:image/${image.filetype};base64,${image.base64_data}`}
                   alt={image.filename}
-                  className="max-w-full h-auto max-h-96 rounded-lg shadow-lg"
+                  className="max-w-full h-full object-contain rounded-lg shadow-lg"
                 />
               </div>
             </div>
@@ -186,37 +186,62 @@ export default function ImageDetailPage() {
 
           {/* Tag Statistics Dashboard */}
           <Card>
-            <div className="p-4 sm:p-6">
+            <div className="p-4 sm:p-6 h-full flex flex-col">
               <div className="mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Tag Statistics</h3>
               </div>
 
               {tagStatistics.length === 0 ? (
-                <EmptyState
-                  title="No tag statistics"
-                  description="No labelers have tagged this image yet."
-                />
+                <div className="flex-1 flex items-center justify-center">
+                  <EmptyState
+                    title="No tag statistics"
+                    description="No tags are available for this group."
+                  />
+                </div>
               ) : (
-                <div className="space-y-3">
-                  {tagStatistics.map((stat) => (
-                    <div key={stat.tag_id} className="bg-gray-50 rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-900">{stat.tag_name}</span>
-                        <span className="text-sm text-gray-500">
-                          {stat.count}/{stat.total_labelers} labelers
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${stat.percentage}%` }}
-                        ></div>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {stat.percentage.toFixed(1)}%
-                      </div>
+                <div className="flex-1 overflow-y-auto">
+                  <div className="space-y-3 pr-2">
+                    <div className="text-xs text-gray-500 mb-2 sticky top-0 bg-white pb-2">
+                      Tags below 50% threshold are shown with a dashed border and warning icon
                     </div>
-                  ))}
+                    {tagStatistics.map((stat) => {
+                      const isBelowThreshold = stat.percentage < 50.0;
+                      const hasNoLabelers = stat.count === 0;
+                      
+                      return (
+                        <div key={stat.tag_id} className={`rounded-lg p-3 ${
+                          isBelowThreshold ? 'bg-yellow-50 border border-dashed border-yellow-200' : 'bg-gray-50'
+                        }`}>
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-900">{stat.tag_name}</span>
+                              {isBelowThreshold && (
+                                <span className="text-xs text-yellow-600" title="Below 50% threshold">⚠</span>
+                              )}
+                              {hasNoLabelers && (
+                                <span className="text-xs text-gray-400" title="No labelers used this tag">○</span>
+                              )}
+                            </div>
+                            <span className="text-sm text-gray-500">
+                              {stat.count}/{stat.total_labelers} labelers
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                isBelowThreshold ? 'bg-yellow-500' : 'bg-blue-600'
+                              }`}
+                              style={{ width: `${stat.percentage}%` }}
+                            ></div>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {stat.percentage.toFixed(1)}%
+                            {isBelowThreshold && <span className="ml-1 text-yellow-600">(below threshold)</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -247,30 +272,50 @@ export default function ImageDetailPage() {
             {tagStatistics.length === 0 ? (
               <EmptyState
                 title="No tags available"
-                description="No labelers have tagged this image yet."
+                description="No tags are available for this group."
               />
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {tagStatistics.map((stat) => {
-                  const isSelected = finalTags.some(tag => tag.tag_id === stat.tag_id);
-                  return (
-                    <button
-                      key={stat.tag_id}
-                      onClick={() => handleToggleTag(stat.tag_id)}
-                      disabled={isUpdating}
-                      className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                        isSelected
-                          ? 'bg-green-100 text-green-800 border-2 border-green-300'
-                          : 'bg-gray-100 text-gray-800 border-2 border-gray-200 hover:bg-gray-200'
-                      } ${isUpdating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                    >
-                      {stat.tag_name}
-                      {isSelected && (
-                        <span className="ml-1 text-green-600">✓</span>
-                      )}
-                    </button>
-                  );
-                })}
+              <div className="space-y-4">
+                <div className="text-sm text-gray-600 mb-3">
+                  Click tags to toggle them as final tags. Tags below 50% threshold are shown with a dashed border.
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {tagStatistics.map((stat) => {
+                    const isSelected = finalTags.some(tag => tag.tag_id === stat.tag_id);
+                    const isBelowThreshold = stat.percentage < 50.0;
+                    const hasNoLabelers = stat.count === 0;
+                    
+                    return (
+                      <button
+                        key={stat.tag_id}
+                        onClick={() => handleToggleTag(stat.tag_id)}
+                        disabled={isUpdating}
+                        className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                          isSelected
+                            ? 'bg-green-100 text-green-800 border-2 border-green-300'
+                            : isBelowThreshold
+                            ? 'bg-gray-100 text-gray-600 border-2 border-dashed border-gray-300 hover:bg-gray-200'
+                            : 'bg-gray-100 text-gray-800 border-2 border-gray-200 hover:bg-gray-200'
+                        } ${isUpdating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        title={
+                          hasNoLabelers 
+                            ? 'No labelers have used this tag'
+                            : isBelowThreshold 
+                            ? `Only ${stat.percentage.toFixed(1)}% of labelers used this tag (below 50% threshold)`
+                            : `${stat.percentage.toFixed(1)}% of labelers used this tag`
+                        }
+                      >
+                        {stat.tag_name}
+                        {isSelected && (
+                          <span className="ml-1 text-green-600">✓</span>
+                        )}
+                        {isBelowThreshold && !isSelected && (
+                          <span className="ml-1 text-gray-400" title="Below threshold">⚠</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 

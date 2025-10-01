@@ -3,7 +3,7 @@ use sea_orm::DatabaseConnection;
 use serde::Serialize;
 use crate::schemas::admin::{ApiResponse, UploadImageRequest};
 use crate::service::admin::AdminService;
-use crate::repository::{ImageRepository, ImageTagsRepository, TagRepository, FinalTagsRepository};
+use crate::repository::{ImageRepository, ImageTagsRepository, TagRepository, FinalTagsRepository, GroupRepository};
 
 #[derive(Serialize)]
 pub struct ImageDetailsResponse {
@@ -121,29 +121,35 @@ pub async fn get_image_details(
         .collect::<std::collections::HashSet<_>>()
         .len() as i32;
     
-    // Build tag statistics
-    let mut tag_statistics = Vec::new();
-    for (tag_id, count) in tag_counts {
-        // Get tag name
-        match TagRepository::find_by_id(&db, tag_id).await {
-            Ok(Some(tag)) => {
-                let percentage = if total_labelers > 0 {
-                    (count as f64 / total_labelers as f64) * 100.0
-                } else {
-                    0.0
-                };
-                
-                tag_statistics.push(TagStatistic {
-                    tag_id,
-                    tag_name: tag.name,
-                    percentage,
-                    count,
-                    total_labelers,
-                });
-            }
-            Ok(None) => continue, // Tag not found, skip
-            Err(_) => continue, // Error getting tag, skip
+    // Get all possible tags for this group
+    let all_group_tags = match GroupRepository::get_possible_tags(&db, group_id).await {
+        Ok(tags) => tags,
+        Err(_) => {
+            return Ok(HttpResponse::InternalServerError().json(ImageDetailsResponse {
+                success: false,
+                message: "Database error".to_string(),
+                data: None,
+            }));
         }
+    };
+    
+    // Build tag statistics for ALL group tags (including unused ones)
+    let mut tag_statistics = Vec::new();
+    for tag in all_group_tags {
+        let count = tag_counts.get(&tag.id).copied().unwrap_or(0);
+        let percentage = if total_labelers > 0 {
+            (count as f64 / total_labelers as f64) * 100.0
+        } else {
+            0.0
+        };
+        
+        tag_statistics.push(TagStatistic {
+            tag_id: tag.id,
+            tag_name: tag.name,
+            percentage,
+            count,
+            total_labelers,
+        });
     }
     
     // Sort by percentage descending
