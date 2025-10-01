@@ -150,19 +150,18 @@ impl AdminService {
         };
 
         // Check if username is being changed and if it already exists
-        if let Some(new_username) = &request.username {
-            if new_username != &labeler.username {
-                match LabelerRepository::find_by_username(db, new_username).await {
-                    Ok(Some(_)) => {
-                        return Ok(ApiResponse {
-                            success: false,
-                            message: "Username already exists".to_string(),
-                            data: None,
-                        });
-                    }
-                    Ok(None) => {} // Username is available
-                    Err(e) => return Err(format!("Database error: {}", e)),
+        if let Some(new_username) = &request.username
+            && new_username != &labeler.username {
+            match LabelerRepository::find_by_username(db, new_username).await {
+                Ok(Some(_)) => {
+                    return Ok(ApiResponse {
+                        success: false,
+                        message: "Username already exists".to_string(),
+                        data: None,
+                    });
                 }
+                Ok(None) => {} // Username is available
+                Err(e) => return Err(format!("Database error: {}", e)),
             }
         }
 
@@ -578,19 +577,18 @@ impl AdminService {
         };
 
         // Check if new name conflicts with existing tag in the same group
-        if let Some(new_name) = &request.name {
-            if new_name != &tag.name {
-                match TagRepository::find_by_name_and_group(db, new_name, tag.group_id).await {
-                    Ok(Some(_)) => {
-                        return Ok(ApiResponse {
-                            success: false,
-                            message: "Tag with this name already exists in this group".to_string(),
-                            data: None,
-                        });
-                    }
-                    Ok(None) => {} // Name is available
-                    Err(e) => return Err(format!("Database error: {}", e)),
+        if let Some(new_name) = &request.name
+            && new_name != &tag.name {
+            match TagRepository::find_by_name_and_group(db, new_name, tag.group_id).await {
+                Ok(Some(_)) => {
+                    return Ok(ApiResponse {
+                        success: false,
+                        message: "Tag with this name already exists in this group".to_string(),
+                        data: None,
+                    });
                 }
+                Ok(None) => {} // Name is available
+                Err(e) => return Err(format!("Database error: {}", e)),
             }
         }
 

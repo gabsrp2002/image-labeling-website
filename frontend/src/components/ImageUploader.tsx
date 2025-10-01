@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import Button from './Button';
 import Modal from './Modal';
 
 interface ImageUploaderProps {
   onImagesSelected: (files: File[]) => void;
-  onUploadComplete: () => void;
   onUploadError: (error: string) => void;
   isUploading?: boolean;
   className?: string;
@@ -14,7 +14,6 @@ interface ImageUploaderProps {
 
 export function ImageUploader({ 
   onImagesSelected, 
-  onUploadComplete, 
   onUploadError, 
   isUploading = false,
   className = '' 
@@ -130,9 +129,11 @@ export function ImageUploader({
               {previewUrls.map((url, index) => (
                 <div key={index} className="relative group">
                   <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    <img
+                    <Image
                       src={url}
                       alt={`Preview ${index + 1}`}
+                      width={200}
+                      height={200}
                       className="w-full h-full object-cover"
                     />
                   </div>

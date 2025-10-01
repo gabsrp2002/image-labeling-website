@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { LoadingSpinner, SmallSpinner, PageHeader, Card, BackButton, Button } from '@/components';
 import { useApiClient } from '@/utils/api';
 
@@ -187,9 +188,11 @@ export default function ImageLabelingPage() {
               <div className="px-4 py-5 sm:p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Image</h2>
                 <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  <img
+                  <Image
                     src={`data:${imageDetails.image.filetype};base64,${imageDetails.image.base64_data}`}
                     alt={imageDetails.image.filename}
+                    width={400}
+                    height={400}
                     className="w-full h-full object-contain"
                   />
                 </div>

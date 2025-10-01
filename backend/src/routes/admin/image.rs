@@ -180,10 +180,7 @@ pub async fn get_image_details(
     };
     
     // Check if there's an admin override
-    let has_admin_override = match FinalTagsRepository::has_admin_override(&db, image_id).await {
-        Ok(has_override) => has_override,
-        Err(_) => false,
-    };
+    let has_admin_override = FinalTagsRepository::has_admin_override(&db, image_id).await.unwrap_or_default();
     
     let image_data = ImageData {
         id: image.id,

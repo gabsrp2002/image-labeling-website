@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useApiClient } from '@/utils/api';
 import { LoadingSpinner, PageHeader, BackButton, Card, EmptyState, SuccessMessage, ErrorMessage } from '@/components';
 
@@ -175,9 +176,11 @@ export default function ImageDetailPage() {
             <div className="p-4 sm:p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Image</h3>
               <div className="flex justify-center h-96">
-                <img
+                <Image
                   src={`data:image/${image.filetype};base64,${image.base64_data}`}
                   alt={image.filename}
+                  width={400}
+                  height={400}
                   className="max-w-full h-full object-contain rounded-lg shadow-lg"
                 />
               </div>

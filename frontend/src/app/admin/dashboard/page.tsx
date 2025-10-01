@@ -24,23 +24,7 @@ interface GroupListResponse {
   total: number;
 }
 
-interface TagStatistic {
-  tag_id: number;
-  tag_name: string;
-  percentage: number;
-  count: number;
-  total_labelers: number;
-}
 
-interface ImageData {
-  filename: string;
-  filetype: string;
-  base64: string;
-  uploaded_at: string;
-  final_tags: string[];
-  tag_statistics: TagStatistic[];
-  has_admin_override: boolean;
-}
 
 
 

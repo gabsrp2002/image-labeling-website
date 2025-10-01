@@ -465,7 +465,6 @@ export default function GroupDetailPage() {
                   <h3 className="text-lg font-medium text-gray-900">Group Images</h3>
                   <ImageUploader
                     onImagesSelected={handleImagesSelected}
-                    onUploadComplete={handleUploadComplete}
                     onUploadError={handleUploadError}
                     isUploading={isUploading}
                   />
