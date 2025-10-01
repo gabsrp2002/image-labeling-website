@@ -171,6 +171,44 @@ export class ApiClient {
     return this.get(`/labeler/groups/${groupId}/images`);
   }
 
+  async getImageDetails(groupId: number, imageId: number): Promise<ApiResponse<{
+    image: {
+      id: number;
+      filename: string;
+      status: string;
+      base64_data: string;
+      filetype: string;
+    };
+    group_tags: Array<{
+      id: number;
+      name: string;
+      description: string | null;
+    }>;
+    current_tags: Array<{
+      id: number;
+      name: string;
+      description: string | null;
+    }>;
+  }>> {
+    return this.get(`/labeler/groups/${groupId}/images/${imageId}`);
+  }
+
+  async updateImageTags(groupId: number, imageId: number, tagIds: number[]): Promise<ApiResponse<null>> {
+    return this.put(`/labeler/groups/${groupId}/images/${imageId}/tags`, {
+      tag_ids: tagIds
+    });
+  }
+
+  async suggestTags(imageId: number): Promise<ApiResponse<{
+    success: boolean;
+    message: string;
+    data: {
+      suggested_tags: string[];
+    };
+  }>> {
+    return this.post(`/labeler/images/${imageId}/suggest_tags`);
+  }
+
   // Helper method to convert file to base64
   static async fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {

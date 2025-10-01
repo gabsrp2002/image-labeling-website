@@ -190,7 +190,11 @@ export default function LabelerGroupDetailPage() {
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                         {images.filter(img => img.status === 'done').map((image) => (
-                          <div key={image.id} className="border border-green-200 bg-green-50 rounded-lg p-3 sm:p-4">
+                          <button
+                            key={image.id}
+                            onClick={() => router.push(`/labeler/groups/${groupId}/images/${image.id}`)}
+                            className="w-full border border-green-200 bg-green-50 rounded-lg p-3 sm:p-4 hover:bg-green-100 transition-colors text-left"
+                          >
                             <div className="flex items-center justify-between">
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
@@ -204,7 +208,7 @@ export default function LabelerGroupDetailPage() {
                                 </span>
                               </div>
                             </div>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -221,7 +225,11 @@ export default function LabelerGroupDetailPage() {
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                         {images.filter(img => img.status === 'pending').map((image) => (
-                          <div key={image.id} className="border border-orange-200 bg-orange-50 rounded-lg p-3 sm:p-4">
+                          <button
+                            key={image.id}
+                            onClick={() => router.push(`/labeler/groups/${groupId}/images/${image.id}`)}
+                            className="w-full border border-orange-200 bg-orange-50 rounded-lg p-3 sm:p-4 hover:bg-orange-100 transition-colors text-left"
+                          >
                             <div className="flex items-center justify-between">
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
@@ -235,7 +243,7 @@ export default function LabelerGroupDetailPage() {
                                 </span>
                               </div>
                             </div>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>

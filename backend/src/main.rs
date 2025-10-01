@@ -15,6 +15,7 @@ use image_labeling_website::routes::admin::final_tags::{
 };
 use image_labeling_website::routes::admin::export::bulk_export;
 use image_labeling_website::routes::labeler::groups::{get_groups, get_group_images};
+use image_labeling_website::routes::labeler::images::{get_labeler_image_details, update_image_tags, suggest_tags};
 use image_labeling_website::repository::AdminRepository;
 use image_labeling_website::middleware::auth::{AdminAuthMiddleware, LabelerAuthMiddleware};
 use dotenv::dotenv;
@@ -105,6 +106,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .wrap(LabelerAuthMiddleware)
                             .route("/groups", web::get().to(get_groups))
                             .route("/groups/{group_id}/images", web::get().to(get_group_images))
+                            .route("/groups/{group_id}/images/{image_id}", web::get().to(get_labeler_image_details))
+                            .route("/groups/{group_id}/images/{image_id}/tags", web::put().to(update_image_tags))
+                            .route("/images/{image_id}/suggest_tags", web::post().to(suggest_tags))
                     )
             )
     })
