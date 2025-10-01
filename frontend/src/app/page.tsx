@@ -1,25 +1,6 @@
-'use client';
-
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function Home() {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
-
-  const handleGetStarted = () => {
-    if (!user) {
-      // User not logged in, redirect to login
-      router.push('/login');
-    } else if (user.role === 'admin') {
-      // User is admin, redirect to admin dashboard
-      router.push('/admin/dashboard');
-    } else if (user.role === 'labeler') {
-      // User is labeler, redirect to labeler groups
-      router.push('/labeler/groups');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -32,13 +13,12 @@ export default function Home() {
           </p>
           <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
             <div className="rounded-md shadow">
-              <button 
-                onClick={handleGetStarted}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed md:py-4 md:text-lg md:px-10 transition-colors duration-200"
+              <Link 
+                href="/login"
+                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10 transition-colors duration-200"
               >
-                {isLoading ? 'Loading...' : 'Get Started'}
-              </button>
+                Get Started
+              </Link>
             </div>
           </div>
         </div>
